@@ -10,24 +10,25 @@ from Game.Player import Player
 
 class Game(object):
     def __init__(self):
-        self.Players = [Player('Player1', 0), Player('Player2', 1)]
+        self.Players = [Player('Player1', 0), Player('Player2', 1)]  # [Player,Player] 玩家们
         self.Players[0].OpPlayer = self.Players[1]
         self.Players[1].OpPlayer = self.Players[0]
         self.Players[0].ThisGame = self.Players[1].ThisGame = self
-        self.GlobalEffect = []
-        self.PlayCardQueue = []
-        self.DayOrNight = random.choice([True, False])
-        self.NumberOfBoard = 0
+        self.GlobalEffect = []  # [Card...] 全局效果
+        self.PlayCardQueue = []  # [Card...] 出牌队列
+        self.DayOrNight = random.choice([True, False])  # 白天？晚上？
+        self.NumberOfBoard = 0  # 场次
 
         # server
-        self.Host = 0
-        self.Port = 0
-        self.comServer = 0
-        self.scrServer = 0
-        self.PComClient = []
-        self.PScrClient = []
+        self.Host = 0  # str server host
+        self.Port = 0  # [int,int] server port
+        self.comServer = 0  # socket 指令服务端
+        self.scrServer = 0  # socket 屏显服务端
+        self.PComClient = []  # socket_conn 指令客户端
+        self.PScrClient = []  # socket_conn 屏显客户端
 
-    def StartServer(self):
+    # 开启游戏服务器
+    def StartServer(self) -> bool:
         # P2 Socket
         self.Host = "192.168.1.101"  # socket.gethostname()
         self.Port = [27015, 27016]
@@ -63,8 +64,10 @@ class Game(object):
             "ins": "prt",
             "para": ["游戏开始"]
         })
+        return True
 
-    def SettlementToNextTurn(self):
+    # 场替
+    def SettlementToNextTurn(self) -> bool:
         minCombat = min(self.Players[0].TolCombat, self.Players[1].TolCombat)
         for player in self.Players:
             if (player.TolCombat == minCombat):
@@ -91,7 +94,8 @@ class Game(object):
         self.DayOrNight = not self.DayOrNight
         return True
 
-    def DeathDetection(self):
+    # 死亡检测
+    def DeathDetection(self) -> bool:
         for NO in range(2):
             player = self.Players[NO]
             for i in range(3):
@@ -104,7 +108,8 @@ class Game(object):
                 player.Lines[i] = deepcopy(tmp)
         return True
 
-    def SettlementRound(self):
+    # 结算轮
+    def SettlementRound(self) -> bool:
         tmp = []
         for effect in self.GlobalEffect:
             effect.Round()
@@ -113,11 +118,13 @@ class Game(object):
         self.GlobalEffect = deepcopy(tmp)
         return True
 
+    # 结算战斗力
     def CalculateCombat(self):
         self.Players[0].CalculateCombat()
         self.Players[1].CalculateCombat()
 
-    def PrintScreen(self, NO, POPONE=False):
+    # 输出屏幕
+    def PrintScreen(self, NO, POPONE=False) -> bool:
         player = self.Players[NO]
         opPlayer = player.OpPlayer
         oup = ""
@@ -159,19 +166,20 @@ class Game(object):
             "para": []
         })
         self.PScrClient[NO].Send(
-            {"scr":oup}
+            {"scr": oup}
         )
 
         return True
 
-    def GetAndCROInstructions(self, NO):
+    # 获取玩家行动
+    def GetAndCROInstructions(self, NO) -> bool:
         player = self.Players[NO]
         msg = "请输入指令:"
         while (True):
             try:
                 self.PComClient[NO].Send({
-                    "ins":"inp",
-                    "para":[msg]
+                    "ins": "inp",
+                    "para": [msg]
                 })
                 inp = self.PComClient[NO].GetRev()
                 ins = inp["ins"]

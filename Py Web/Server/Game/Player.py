@@ -4,27 +4,28 @@ from random import randint
 class Player(object):
 
     def __init__(self, Name, NO):
-        self.OpPlayer = None
-        self.ThisGame = None
+        self.OpPlayer = None  # Player 对手玩家
+        self.ThisGame = None  # Game 当前游戏
 
-        self.HandCards = []
-        self.RawPile = []
-        self.UnitGrave = []
-        self.Lines = [[] for _ in range(3)]
-        self.IsAbstain = False
+        self.HandCards = []  # list[card...] 手牌
+        self.RawPile = []  # list[card...] 抽牌堆
+        self.UnitGrave = []  # list[card...] 墓地
+        self.Lines = [[] for _ in range(3)]  # list[list[card...]...] 战区
+        self.IsAbstain = False  # bool 放弃？
 
-        self.Name = Name
-        self.NO = NO
-        self.Health = 3
-        self.TolCombat = 0
+        self.Name = Name  # str 玩家名
+        self.NO = NO  # int 玩家编号
+        self.Health = 3  # int 玩家生命值
+        self.TolCombat = 0  # int 玩家总战力
 
-    def PopCard(self,ins):
+    # 出牌
+    def PopCard(self, ins) -> bool:
         try:
             card_i = int(ins[0])
             if (len(self.HandCards) <= card_i): return False
             card = self.HandCards[card_i]
             if (card.Play(self, ins[1:])):
-                #历史出牌队列
+                # 历史出牌队列
                 self.ThisGame.PlayCardQueue.append(card)
                 del self.HandCards[card_i]
                 return True
@@ -33,19 +34,22 @@ class Player(object):
         except:
             return False
 
-    def GetCards(self, num):
+    # 抽牌
+    def GetCards(self, num) -> int:
         ct = 0
         rawPileSize = len(self.RawPile)
         while (ct < num and rawPileSize > 0):
             p = randint(0, rawPileSize - 1)
             card = self.RawPile[p]
+            card.Pump()
             self.HandCards.append(card)
             del card
             rawPileSize -= 1
             ct += 1
         return ct
 
-    def ThrowCards(self, card_is):
+    # 弃牌
+    def ThrowCards(self, card_is) -> bool:
         if (len(card_is) == 0): return True
         card_is = list(set(card_is))
         if (card_is[0] > len(self.HandCards) - 1):
@@ -53,11 +57,13 @@ class Player(object):
         else:
             i = 0
             for card_i in card_is:
+                self.HandCards[card_i - i].Aban()
                 del self.HandCards[card_i - i]
                 i += 1
             return True
 
-    def CalculateCombat(self):
+    # 计算战力
+    def CalculateCombat(self) -> bool:
         self.TolCombat = 0
         for Line in self.Lines:
             for card in Line:
@@ -65,7 +71,8 @@ class Player(object):
                     self.TolCombat += card.Combat()
         return True
 
-    def SettlementOnCourtSkill(self):
+    # 结算场上技能
+    def SettlementOnCourtSkill(self) -> bool:
         for line in self.Lines:
             for card in line:
                 card.OnCourt()

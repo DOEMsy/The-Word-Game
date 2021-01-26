@@ -28,7 +28,8 @@ for key, value in Labels:
     Labels[value] = key
 
 
-def Is(label, card):
+# 是否具有标签
+def Is(label, card) -> bool:
     if (card.Type == "UnitCard"):
         if (type(label) == str):    label = Labels[label]
         if (label % 10 == 0):

@@ -2,26 +2,36 @@ from Card.Card import *
 
 
 class SkillCard(Card):
-    def __init__(self, name, desc, level, label):
+    def __init__(self, name: str, desc: str, level: int, label: []):
         super().__init__(name, desc)
-        self.Level = level
-        self.Label = label
-        self.Type = "SkillCard"
+        self.Level = level  # 等级
+        self.Label = label  # 标签
+        self.Type = "SkillCard"  # 卡牌类型
 
-    def Play(self, player, to):
+    # 出牌
+    def Play(self, player, to) -> bool:
         return True
 
-    def OnCourt(self):
+    # 单位在场效果，打入战区，玩家回合结束结算
+    def OnCourt(self) -> bool:
         return True
 
-    def Round(self):
+    # 全局效果，打入全局效果区，每轮结束结算
+    def Round(self) -> bool:
         return True
 
-    def Finish(self):
+    # 持续结束？待定
+    def Finish(self) -> bool:
         return True
 
-    def lstr(self):
+    # 场替
+    def ToNextTurn(self)->bool:
+        return True
+
+    # 转换长字串，待完善
+    def lstr(self) -> str:
         return ""
 
-    def sstr(self):
+    # 转换短字串，待完善
+    def sstr(self) -> str:
         return ""
