@@ -31,7 +31,9 @@ while True:
     if (ins == 'inp'):
         # 要求输入
         print(para)
-        inp = input().split()
+        inp = []
+        while(len(inp)==0):
+            inp = input().split()
         comSocket.send(
             bytes(
                 json.dumps({
