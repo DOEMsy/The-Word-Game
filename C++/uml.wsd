@@ -1,0 +1,19 @@
+@startuml
+
+class Player
+class Game
+class Card
+class UnitCard
+class StatusEffect
+
+Card <|-- UnitCard
+Card <|-- StatusEffect
+UnitCard <|-- Wolf
+UnitCard <|-- ImperialSoldier
+UnitCard <|-- Goblin
+
+Player --> Card
+Game -- Player
+Game -- Card
+
+@enduml
