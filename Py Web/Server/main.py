@@ -3,7 +3,7 @@ from random import randint
 
 from ExternalLibrary.ExternalLibrary import GetRandCard
 from Game.Game import Game
-from Card.OriginalPackage.Unit import *
+import Mod
 
 game = Game()
 game.StartServer()

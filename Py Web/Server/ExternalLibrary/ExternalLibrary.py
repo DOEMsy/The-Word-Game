@@ -14,6 +14,13 @@ def GloGet(key):
     return GlobalVariable.get(key)
 
 
+# 将卡组中的卡全部转换成字典
+def toDict(Cards: []) -> list:
+    res = []
+    for card in Cards:
+        res.append(card.dict())
+    return res
+
 # 全部的卡包
 AllCard = []
 

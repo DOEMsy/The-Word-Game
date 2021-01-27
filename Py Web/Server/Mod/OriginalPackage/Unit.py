@@ -1,8 +1,5 @@
 from Card.UnitCard import UnitCard
 
-from ExternalLibrary.ExternalLibrary import RegistrationCard
-
-
 class Wolf(UnitCard):
     def __init__(self):
         super().__init__(

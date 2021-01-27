@@ -161,13 +161,31 @@ class Game(object):
             oup += "{}. {},\n".format(card_i, card.lstr())
             card_i += 1
 
+
+        dic = {
+            "GlobalEffect":[],
+            "DayOrNight":str(self.DayOrNight),
+            "NumberOfBoard":str(self.NumberOfBoard),
+            "PlayCardQueue": [],
+            "Player":[
+                self.Players[0].dict(),
+                self.Players[1].dict(),
+            ],
+            "YourNum":str(NO),
+        }
+
+
+
+
+
         self.PComClient[NO].Send({
             "ins": "scr",
             "para": []
         })
-        self.PScrClient[NO].Send(
-            {"scr": oup}
-        )
+        self.PScrClient[NO].Send({
+            "scr": oup,
+            "dic": dic
+        })
 
         return True
 
@@ -175,11 +193,15 @@ class Game(object):
     def GetAndCROInstructions(self, NO) -> bool:
         player = self.Players[NO]
         msg = "请输入指令:"
+        ct = 0
         while (True):
             try:
                 self.PComClient[NO].Send({
                     "ins": "inp",
-                    "para": [msg]
+                    "para": [
+                        msg,
+                        str(ct)
+                    ]
                 })
                 inp = self.PComClient[NO].GetRev()
                 ins = inp["ins"]
@@ -208,5 +230,6 @@ class Game(object):
             except:
                 pass
             msg = "指令错误，请重新输入:"
+            ct+=1
 
         return True

@@ -1,4 +1,4 @@
-from Card.OriginalPackage.Unit import Wolf, ImperialSoldier, Goblin
+from Mod.OriginalPackage.Unit import Wolf, ImperialSoldier, Goblin
 from ExternalLibrary.ExternalLibrary import RegistrationCard
 
 RegistrationCard([

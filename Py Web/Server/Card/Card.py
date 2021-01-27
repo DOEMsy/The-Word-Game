@@ -23,3 +23,10 @@ class Card(object):
     # 字符串
     def __str__(self) -> str:
         return "[{},{},{}]".format(self.Name, self.Desc, self.Type)
+
+    def dict(self) -> dict:
+        return {
+            "Name": self.Name,
+            "Desc": self.Desc,
+            "Type": self.Type,
+        }

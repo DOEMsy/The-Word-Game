@@ -64,3 +64,17 @@ class UnitCard(Card):
     # 转换短字串
     def sstr(self) -> str:
         return "[{},{},{}]".format(self.Name, self.Combat(), self.Level)
+
+    # 转换dict
+    def dict(self) -> dict:
+        res = {
+            "Name":self.Name,
+            "Desc":self.Desc,
+            "Type":self.Type,
+            "Combat":self.Combat(),
+            "Label":self.Label,
+            "Level":self.Level,
+            "SelfCombat":self.SelfCombat,
+            "Status":self.Status,
+        }
+        return res

@@ -1,5 +1,7 @@
 from random import randint
 
+from ExternalLibrary.ExternalLibrary import toDict
+
 
 class Player(object):
 
@@ -77,3 +79,19 @@ class Player(object):
             for card in line:
                 card.OnCourt()
         return True
+
+    def dict(self):
+        return {
+            "HandCards":toDict(self.HandCards),
+            "RawPile":toDict(self.RawPile),
+            "UnitGrave":toDict(self.UnitGrave),
+            "Lines":[
+                toDict(self.Lines[0]),
+                toDict(self.Lines[1]),
+                toDict(self.Lines[2]),
+            ],
+            "Name":self.Name,
+            "NO":str(self.NO),
+            "Health":str(self.Health),
+            "TolCombat":str(self.TolCombat),
+        }

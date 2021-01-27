@@ -49,8 +49,9 @@ while True:
     elif (ins == 'scr'):
         # 刷新屏幕
         os.system('cls')
-        scr = json.loads(scrSocket.recv(4096).decode("utf-8"))
+        scr = json.loads(scrSocket.recv(65536).decode("utf-8"))
         print(scr["scr"])
+        #print();print(scr["dic"])
     elif (ins == 'end'):
         print(para)
         break
