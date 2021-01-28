@@ -80,18 +80,19 @@ class Player(object):
                 card.OnCourt()
         return True
 
+    # 字典化
     def dict(self):
         return {
-            "HandCards":toDict(self.HandCards),
-            "RawPile":toDict(self.RawPile),
-            "UnitGrave":toDict(self.UnitGrave),
-            "Lines":[
+            "HandCards": toDict(self.HandCards),
+            "RawPileSize": len(self.RawPile),  # 抽牌堆只能看到大小
+            "UnitGrave": toDict(self.UnitGrave),
+            "Lines": [
                 toDict(self.Lines[0]),
                 toDict(self.Lines[1]),
                 toDict(self.Lines[2]),
             ],
-            "Name":self.Name,
-            "NO":str(self.NO),
-            "Health":str(self.Health),
-            "TolCombat":str(self.TolCombat),
+            "Name": self.Name,
+            "NO": self.NO,
+            "Health": self.Health,
+            "TolCombat": self.TolCombat,
         }

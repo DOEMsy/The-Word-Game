@@ -10,4 +10,13 @@ class StatysEffect(object):
     def CombatAmend(self) -> int:
         return self.BasisCombatAmend
 
+    #字典化
+    def dict(self)->dict:
+        return{
+            "Name": self.Name,
+            "Desc": self.Desc,
+            "CombatAmend": self.CombatAmend,
+            "Label": self.Label,
+        }
+
     #待完善...

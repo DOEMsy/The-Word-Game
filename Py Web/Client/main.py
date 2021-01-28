@@ -52,6 +52,9 @@ while True:
         scr = json.loads(scrSocket.recv(65536).decode("utf-8"))
         print(scr["scr"])
         #print();print(scr["dic"])
+        #open("scr.txt","w").write(str(scr["scr"]))
+        #open("dic.txt","w").write(str(scr["dic"]))
+
     elif (ins == 'end'):
         print(para)
         break

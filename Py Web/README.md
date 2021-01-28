@@ -17,6 +17,13 @@
     * [ ] 完善Mod开发手册
     * [ ] 完善客户端开发手册
     * [ ] 实现技能卡牌相关功能
+* 2021.1.28
+  * 补充通信规则
+  * 近期目标：
+    * [ ] 实现技能卡牌相关功能
+      * [ ] 完善事件系统（事件驱动模型 ）
+        * [ ] 公共监视器
+        * [ ] 独立监视器
 
 
 
@@ -177,3 +184,68 @@
 
 * `scr`  项为字符串，是游戏对局屏幕的字符画形式，可以直接输出在屏幕上作为客户端屏幕显示
 * `dic` 项为字典，其中包括了全部游戏对局的信息
+
+#### scr 示例
+
+```
+3: 
+2: 
+1: 
+-----------NA:Player1 CO:0, HE:3 GV:False CP:10 ----------
+Night
+Gl: 
+-----------NA:Player2 CO:0, HE:3 GV:False CP:10 ----------
+1: 
+2: 
+3: 
+It's you turn
+You are Player2 now，Board 0
+HandCards:
+0. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
+1. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
+2. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
+3. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
+4. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
+5. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
+6. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
+7. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
+8. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
+9. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
+```
+
+
+
+#### dic 示例
+
+```json
+{
+    "GlobalEffect":[],
+    "DayOrNight":true,
+    "NumberOfBoard":0,
+    "PlayCardQueue": [],
+    "Player":[
+        {
+            "HandCards":[],
+            "RawPileSize":20,
+            "UnitGrave":[],
+            "Lines":[[],[],[]],
+            "Name":"Msy",
+            "NO":0,
+            "Health":3,
+            "TolCombat":0
+        },
+        {
+            "HandCards":[],
+            "RawPileSize":20,
+            "UnitGrave":[],
+            "Lines":[[],[],[]],
+            "Name":"BladeHiker",
+            "NO":1,
+            "Health":3,
+            "TolCombat":0
+        }
+    ],
+    "YourNum":0,
+}
+```
+

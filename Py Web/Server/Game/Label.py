@@ -14,7 +14,7 @@ Labels = {
     "Natural": 301,  # 自然
     "Dragon": 302,  # 龙
     "Mechanical": 303,  # 机械
-    "MagicCreature": 304,  # 魔0法生物
+    "MagicCreature": 304,  # 魔法生物
 
     # 彼世 OutsideWorldCreature
     "OutsideWorldCreature": 400,
@@ -30,7 +30,7 @@ for key, value in Labels:
 
 # 是否具有标签
 def Is(label, card) -> bool:
-    if (card.Type == "UnitCard"):
+    if (card.Type in {"UnitCard","SkillCard"}):
         if (type(label) == str):    label = Labels[label]
         if (label % 10 == 0):
             for i in range(1, 10):
@@ -40,5 +40,5 @@ def Is(label, card) -> bool:
             return False
         else:
             return card.Label.get(label) != None
-    elif (card.Type == "SkillCard"):
-        pass
+    else:
+        return False

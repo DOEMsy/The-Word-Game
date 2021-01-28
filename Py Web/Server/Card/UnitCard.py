@@ -1,4 +1,5 @@
 from Card.Card import *
+from ExternalLibrary.ExternalLibrary import toDict
 
 
 class UnitCard(Card):
@@ -75,6 +76,6 @@ class UnitCard(Card):
             "Label":self.Label,
             "Level":self.Level,
             "SelfCombat":self.SelfCombat,
-            "Status":self.Status,
+            "Status":toDict(self.Status),
         }
         return res

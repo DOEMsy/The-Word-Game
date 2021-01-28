@@ -164,14 +164,14 @@ class Game(object):
 
         dic = {
             "GlobalEffect":[],
-            "DayOrNight":str(self.DayOrNight),
-            "NumberOfBoard":str(self.NumberOfBoard),
+            "DayOrNight":self.DayOrNight,
+            "NumberOfBoard":self.NumberOfBoard,
             "PlayCardQueue": [],
             "Player":[
                 self.Players[0].dict(),
                 self.Players[1].dict(),
             ],
-            "YourNum":str(NO),
+            "YourNum":NO,
         }
 
 

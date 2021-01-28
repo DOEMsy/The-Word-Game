@@ -43,6 +43,7 @@ def RegistrationCard(Cards: list):
                 AllSearchCard["Type"][type].add(card)
             except:
                 AllSearchCard["Type"][type] = set()
+                AllSearchCard["Type"][type].add(card)
         except:
             pass
 
@@ -53,6 +54,7 @@ def RegistrationCard(Cards: list):
                 AllSearchCard["Level"][level].add(card)
             except:
                 AllSearchCard["Level"][level] = set()
+                AllSearchCard["Type"][level].add(card)
         except:
             pass
 
@@ -64,6 +66,7 @@ def RegistrationCard(Cards: list):
                     AllSearchCard["Label"][lab].add(card)
                 except:
                     AllSearchCard["Label"][lab] = set()
+                    AllSearchCard["Type"][lab].add(card)
         except:
             pass
 

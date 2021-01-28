@@ -13,8 +13,8 @@ class Card(object):
         return True
 
     # 出牌
-    def Play(self) -> bool:
-        return True
+    def Play(self, player, ins) -> bool:
+        return False
 
     # 弃牌，返回值必须为True
     def Aban(self) -> bool:
