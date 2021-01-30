@@ -1,3 +1,4 @@
+from copy import deepcopy
 from random import randint
 
 from ExternalLibrary.ExternalLibrary import toDict
@@ -42,10 +43,10 @@ class Player(object):
         rawPileSize = len(self.RawPile)
         while (ct < num and rawPileSize > 0):
             p = randint(0, rawPileSize - 1)
-            card = self.RawPile[p]
+            card = deepcopy(self.RawPile[p])
             card.Pump()
             self.HandCards.append(card)
-            del card
+            del self.RawPile[p]
             rawPileSize -= 1
             ct += 1
         return ct

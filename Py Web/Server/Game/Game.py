@@ -3,6 +3,8 @@ import os
 import random
 from copy import deepcopy
 import socket
+import _thread
+from threading import Lock
 
 from ExternalLibrary.MsySocket import Connet
 from Game.Player import Player
@@ -27,9 +29,22 @@ class Game(object):
         self.PComClient = []  # socket_conn 指令客户端
         self.PScrClient = []  # socket_conn 屏显客户端
 
+        # 事件处理
+        self.event = []  # 总线
+        '''
+            event = [
+                {
+                    
+                }
+            ]
+        '''
+        self.eventLock = Lock()  # 总线锁
+        self.gameLock = Lock()  # 游戏锁
+
     # 开启游戏服务器
     def StartServer(self) -> bool:
         # P2 Socket
+        self.gameLock.acquire()
         self.Host = "192.168.1.101"  # socket.gethostname()
         self.Port = [27015, 27016]
         self.comServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -64,10 +79,12 @@ class Game(object):
             "ins": "prt",
             "para": ["游戏开始"]
         })
+        self.gameLock.release()
         return True
 
     # 场替
     def SettlementToNextTurn(self) -> bool:
+        self.gameLock.acquire()
         minCombat = min(self.Players[0].TolCombat, self.Players[1].TolCombat)
         for player in self.Players:
             if (player.TolCombat == minCombat):
@@ -92,39 +109,45 @@ class Game(object):
 
         self.NumberOfBoard += 1
         self.DayOrNight = not self.DayOrNight
+        self.gameLock.release()
         return True
 
-    # 死亡检测
+    #死亡检测（0.2.0+ 弃用）
     def DeathDetection(self) -> bool:
-        for NO in range(2):
-            player = self.Players[NO]
-            for i in range(3):
-                tmp = []
-                line = player.Lines[i]
-                for card in line:
-                    # 0 濒死 <0 死亡
-                    if not (card.Combat() < 0 and card.Dead()):
-                        tmp.append(card)
-                player.Lines[i] = deepcopy(tmp)
-        return True
+       for NO in range(2):
+           player = self.Players[NO]
+           for i in range(3):
+               tmp = []
+               line = player.Lines[i]
+               for card in line:
+                   # 0 濒死 <0 死亡
+                   if not (card.Combat() < 0 and card.Dead()):
+                       tmp.append(card)
+               player.Lines[i] = deepcopy(tmp)
+       return True
 
     # 结算轮
     def SettlementRound(self) -> bool:
+        self.gameLock.acquire()
         tmp = []
         for effect in self.GlobalEffect:
             effect.Round()
             if (not effect.Finish()):
                 tmp.append(effect)
         self.GlobalEffect = deepcopy(tmp)
+        self.gameLock.release()
         return True
 
     # 结算战斗力
     def CalculateCombat(self):
+        self.gameLock.acquire()
         self.Players[0].CalculateCombat()
         self.Players[1].CalculateCombat()
+        self.gameLock.release()
 
     # 输出屏幕
     def PrintScreen(self, NO, POPONE=False) -> bool:
+        self.gameLock.acquire()
         player = self.Players[NO]
         opPlayer = player.OpPlayer
         oup = ""
@@ -161,22 +184,17 @@ class Game(object):
             oup += "{}. {},\n".format(card_i, card.lstr())
             card_i += 1
 
-
         dic = {
-            "GlobalEffect":[],
-            "DayOrNight":self.DayOrNight,
-            "NumberOfBoard":self.NumberOfBoard,
+            "GlobalEffect": [],
+            "DayOrNight": self.DayOrNight,
+            "NumberOfBoard": self.NumberOfBoard,
             "PlayCardQueue": [],
-            "Player":[
+            "Player": [
                 self.Players[0].dict(),
                 self.Players[1].dict(),
             ],
-            "YourNum":NO,
+            "YourNum": NO,
         }
-
-
-
-
 
         self.PComClient[NO].Send({
             "ins": "scr",
@@ -187,10 +205,13 @@ class Game(object):
             "dic": dic
         })
 
+        self.gameLock.release()
+
         return True
 
     # 获取玩家行动
     def GetAndCROInstructions(self, NO) -> bool:
+        self.gameLock.acquire()
         player = self.Players[NO]
         msg = "请输入指令:"
         ct = 0
@@ -210,10 +231,12 @@ class Game(object):
                     break
                 elif (ins == "pop"):
                     '''
+                        0.2.1+
                         {
                             "ins":"pop",
                             "para":[
                                 card_i,
+                                card_uid,
                                 card_type,
                                 to...
                             ]
@@ -230,6 +253,6 @@ class Game(object):
             except:
                 pass
             msg = "指令错误，请重新输入:"
-            ct+=1
-
+            ct += 1
+        self.gameLock.release()
         return True

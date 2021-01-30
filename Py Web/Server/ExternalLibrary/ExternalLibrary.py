@@ -54,7 +54,7 @@ def RegistrationCard(Cards: list):
                 AllSearchCard["Level"][level].add(card)
             except:
                 AllSearchCard["Level"][level] = set()
-                AllSearchCard["Type"][level].add(card)
+                AllSearchCard["Level"][level].add(card)
         except:
             pass
 
@@ -66,7 +66,7 @@ def RegistrationCard(Cards: list):
                     AllSearchCard["Label"][lab].add(card)
                 except:
                     AllSearchCard["Label"][lab] = set()
-                    AllSearchCard["Type"][lab].add(card)
+                    AllSearchCard["Label"][lab].add(card)
         except:
             pass
 
@@ -97,3 +97,13 @@ def GetRandCard(PropertyRequirements: dict, num: int):
     for i in range(num):
         res.append(choice(cs))
     return res
+
+
+#全局UID
+GloUID = 15363
+
+#分配UID
+def GetUID():
+    global GloUID
+    GloUID += 1
+    return GloUID

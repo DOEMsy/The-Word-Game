@@ -1,11 +1,18 @@
+from ExternalLibrary.ExternalLibrary import GetUID
+
+
 class Card(object):
+
     def __init__(self, name: str, desc: str):
         self.Name = name  # 名称
         self.Desc = desc  # 介绍
         self.Type = "None"  # 卡牌类型
+        self.UID = None  # 唯一标识
 
     # 抽入手中，返回值必须为True
+    # 普通卡牌抽入手中才有UID
     def Pump(self) -> bool:
+        self.UID = GetUID()
         return True
 
     # 在手上
@@ -29,4 +36,5 @@ class Card(object):
             "Name": self.Name,
             "Desc": self.Desc,
             "Type": self.Type,
+            "UID" : self.UID,
         }

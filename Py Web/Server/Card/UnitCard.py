@@ -5,11 +5,12 @@ from ExternalLibrary.ExternalLibrary import toDict
 class UnitCard(Card):
     def __init__(self, name: str, desc: str, combat: int, level: int, label: []):
         super().__init__(name, desc)
-        self.SelfCombat = combat  # 基础战斗力
+        self.SelfCombat = combat  # 基础值战斗力
         self.Level = level  # 等级
         self.Label = label  # 标签
         self.Type = "UnitCard"  # 卡牌类型
-        self.Status = []  # 卡牌状态
+        self.Status = []  # 卡牌状态槽
+
 
     # 出牌
     # ins =  [card_type,to...]
@@ -17,7 +18,9 @@ class UnitCard(Card):
     def Play(self, player, ins) -> bool:
         try:
             card_type = ins[0]
-            to = list(map(int, ins[1:]))
+            card_uid = int(ins[1])
+            if(card_uid!=self.UID): return False
+            to = list(map(int, ins[2:]))
             if (card_type != self.Type):   return False
             if (3 >= to[0] > 0):
                 player.Lines[to[0] - 1].append(self)
@@ -31,12 +34,13 @@ class UnitCard(Card):
         except:
             return False
 
-    # 战斗力
+    # 应用值战斗力
     def Combat(self) -> int:
+        if(self.SelfCombat==0):  return 0 #濒死
         res = self.SelfCombat
         for se in self.Status:
             res += se.CombatAmend()
-        return res
+        return max(res,0)   #最低不能少于0
 
     # 出牌效果
     def Debut(self) -> bool:
@@ -54,17 +58,27 @@ class UnitCard(Card):
     def ToNextTurn(self) -> bool:
         return True
 
+    # 受到伤害 基础战力
+    def GetDamage(self,num):
+        self.SelfCombat -= num
+        if(self.SelfCombat<0 and self.Dead()):
+            pass
+        else:
+            self.SelfCombat = 0
+        return True
+
     # 死亡
     def Dead(self) -> bool:
+
         return True
 
     # 转换长字串
     def lstr(self) -> str:
-        return "[{},{},{},{},{}]".format(self.Type, self.Name, self.Combat(), self.Level, self.Desc)
+        return "[{},{},{},{},{},{}]".format(self.UID,self.Type, self.Name, self.Combat(), self.Level, self.Desc)
 
     # 转换短字串
     def sstr(self) -> str:
-        return "[{},{},{}]".format(self.Name, self.Combat(), self.Level)
+        return "[{},{},{},{}]".format(self.UID,self.Name, self.Combat(), self.Level)
 
     # 转换dict
     def dict(self) -> dict:
@@ -77,5 +91,6 @@ class UnitCard(Card):
             "Level":self.Level,
             "SelfCombat":self.SelfCombat,
             "Status":toDict(self.Status),
+            "UID":self.UID,
         }
         return res
