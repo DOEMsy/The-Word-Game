@@ -7,12 +7,17 @@ class Card(object):
         self.Name = name  # 名称
         self.Desc = desc  # 介绍
         self.Type = "None"  # 卡牌类型
-        self.UID = None  # 唯一标识
+        self.UID = 0  # 唯一标识
+        self.OwnNO = -1 #拥有者编号 -1 中立, 0 玩家1 , 1 玩家2
+        self.ThisGame = None   # 本局游戏
+        self.Location = -2 #位置  -2 未出现 , -1 手牌 , 0 1 2 战线
 
     # 抽入手中，返回值必须为True
     # 普通卡牌抽入手中才有UID
-    def Pump(self) -> bool:
+    def Pump(self,NO) -> bool:
         self.UID = GetUID()
+        self.Location = -1
+        self.OwnNO = NO
         return True
 
     # 在手上

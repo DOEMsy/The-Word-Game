@@ -1,4 +1,5 @@
 # 全局变量
+from copy import deepcopy
 from random import choice, sample
 
 GlobalVariable = dict()
@@ -95,7 +96,7 @@ def GetRandCard(PropertyRequirements: dict, num: int):
     res = []
     cs = GetCardSet(PropertyRequirements)
     for i in range(num):
-        res.append(choice(cs))
+        res.append(deepcopy(choice(cs)))
     return res
 
 

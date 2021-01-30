@@ -43,10 +43,10 @@ class Player(object):
         rawPileSize = len(self.RawPile)
         while (ct < num and rawPileSize > 0):
             p = randint(0, rawPileSize - 1)
-            card = deepcopy(self.RawPile[p])
-            card.Pump()
+            card = self.RawPile.pop(p)
+            card.Pump(self.NO)
+            card.ThisGame = self.ThisGame
             self.HandCards.append(card)
-            del self.RawPile[p]
             rawPileSize -= 1
             ct += 1
         return ct

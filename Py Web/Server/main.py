@@ -20,12 +20,12 @@ for i in range(10):
     game.Players[1].RawPile.append(Wolf())
 '''
 
-game.Players[0].RawPile = deepcopy(GetRandCard({
+game.Players[0].RawPile = GetRandCard({
     "Level": 1
-}, 20))
-game.Players[1].RawPile = deepcopy(GetRandCard({
+}, 20)
+game.Players[1].RawPile = GetRandCard({
     "Level": 1
-}, 20))
+}, 20)
 
 # test↑
 game.Players[0].GetCards(10)
@@ -41,14 +41,14 @@ while (game.NumberOfBoard < 3):
             game.PrintScreen(secPlayer.NO)
             game.GetAndCROInstructions(fstPlayer.NO)
             fstPlayer.SettlementOnCourtSkill()
-            game.DeathDetection()
+            #game.DeathDetection()
             game.CalculateCombat()
         if (not secPlayer.IsAbstain):
             game.PrintScreen(fstPlayer.NO)
             game.PrintScreen(secPlayer.NO, True)
             game.GetAndCROInstructions(secPlayer.NO)
             secPlayer.SettlementOnCourtSkill()
-            game.DeathDetection()
+            #game.DeathDetection()
             game.CalculateCombat()
         game.SettlementRound()
     game.SettlementToNextTurn()

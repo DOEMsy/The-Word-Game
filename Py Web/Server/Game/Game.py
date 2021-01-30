@@ -6,6 +6,7 @@ import socket
 import _thread
 from threading import Lock
 
+from ExternalLibrary.MsyEvent import EventMonitoring
 from ExternalLibrary.MsySocket import Connet
 from Game.Player import Player
 
@@ -20,6 +21,7 @@ class Game(object):
         self.PlayCardQueue = []  # [Card...] 出牌队列
         self.DayOrNight = random.choice([True, False])  # 白天？晚上？
         self.NumberOfBoard = 0  # 场次
+        self.UID = 1166  # 唯一识别ID
 
         # server
         self.Host = 0  # str server host
@@ -30,16 +32,10 @@ class Game(object):
         self.PScrClient = []  # socket_conn 屏显客户端
 
         # 事件处理
-        self.event = []  # 总线
-        '''
-            event = [
-                {
-                    
-                }
-            ]
-        '''
-        self.eventLock = Lock()  # 总线锁
         self.gameLock = Lock()  # 游戏锁
+        self.eventMonitoring = EventMonitoring()  # 总线
+        self.eventMonitoring.ThisGame = self
+        self.eventMonitoring.BundledDeathTrigger(self)  # 绑定game的死亡触发器
 
     # 开启游戏服务器
     def StartServer(self) -> bool:
@@ -112,19 +108,35 @@ class Game(object):
         self.gameLock.release()
         return True
 
-    #死亡检测（0.2.0+ 弃用）
-    def DeathDetection(self) -> bool:
-       for NO in range(2):
-           player = self.Players[NO]
-           for i in range(3):
-               tmp = []
-               line = player.Lines[i]
-               for card in line:
-                   # 0 濒死 <0 死亡
-                   if not (card.Combat() < 0 and card.Dead()):
-                       tmp.append(card)
-               player.Lines[i] = deepcopy(tmp)
-       return True
+    # 死亡检测（0.2.0+ 弃用）
+    # def DeathDetection(self) -> bool:
+    #   for NO in range(2):
+    #       player = self.Players[NO]
+    #       for i in range(3):
+    #           tmp = []
+    #           line = player.Lines[i]
+    #           for card in line:
+    #               # 0 濒死 <0 死亡
+    #               if not (card.Combat() < 0 and card.Dead()):
+    #                   tmp.append(card)
+    #           player.Lines[i] = deepcopy(tmp)
+    #   return True
+
+    # 死亡处理处理由死亡事件调用，已加锁
+    #   死亡event = {
+    #       "type" : "Death",
+    #       "para" : [UID,OwnNO]
+    #   }
+    def DeathProcessing(self, event) -> bool:
+        UID = event['para'][0]
+        OwnNO = event['para'][1]
+        for i in range(self.Players[OwnNO].Lines):
+            for j in range(self.Players[OwnNO].Lines[i]):
+                if (self.Players[OwnNO].Lines[i][j].UID == UID):
+                    self.Players[OwnNO].Lines[i].pop(j)
+        # 随后发送死亡信号向客户端？暂定
+
+        return True
 
     # 结算轮
     def SettlementRound(self) -> bool:

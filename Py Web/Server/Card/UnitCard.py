@@ -11,7 +11,6 @@ class UnitCard(Card):
         self.Type = "UnitCard"  # 卡牌类型
         self.Status = []  # 卡牌状态槽
 
-
     # 出牌
     # ins =  [card_type,to...]
     # 对于普通单位牌，to 只有一项
@@ -19,7 +18,7 @@ class UnitCard(Card):
         try:
             card_type = ins[0]
             card_uid = int(ins[1])
-            if(card_uid!=self.UID): return False
+            if (card_uid != self.UID): return False
             to = list(map(int, ins[2:]))
             if (card_type != self.Type):   return False
             if (3 >= to[0] > 0):
@@ -36,14 +35,23 @@ class UnitCard(Card):
 
     # 应用值战斗力
     def Combat(self) -> int:
-        if(self.SelfCombat==0):  return 0 #濒死
+        if (self.SelfCombat == 0):  return 0  # 濒死
         res = self.SelfCombat
         for se in self.Status:
             res += se.CombatAmend()
-        return max(res,0)   #最低不能少于0
+        return max(res, 0)  # 最低不能少于0
 
     # 出牌效果
     def Debut(self) -> bool:
+
+        # 注册触发器，如果有需要的话
+
+        # 注"销"触发器需要看逻辑时机会，
+        # 例如一个卡牌死亡后自爆，则触发器注销应在触发DeathProcessing中，执行完自爆后再注销
+        # 如果注销在 CanDead 函数中，那么将可能无法完成自爆
+        # 再例如一个监视别人死亡的卡牌，则触发器注销可以放在 CanDead 函数中，也可以放在 DeathProcessing 中
+        # 但是如果是一张监视出牌的卡片，注册的是其他触发器，DeathProcessing 不会被执行， 那么需要注销就不能放在 DeathProcessing 中
+
         return True
 
     # 单位在场效果，打入战区，玩家回合结束结算
@@ -59,38 +67,48 @@ class UnitCard(Card):
         return True
 
     # 受到伤害 基础战力
-    def GetDamage(self,num):
+    def GetDamage(self, num):
         self.SelfCombat -= num
-        if(self.SelfCombat<0 and self.Dead()):
-            pass
+        if (self.SelfCombat < 0 and self.CanDead()):
+            self.ThisGame.eventMonitoring.Occurrence({
+                "type": "Death"
+            })
         else:
             self.SelfCombat = 0
         return True
 
-    # 死亡
-    def Dead(self) -> bool:
+    # 可死亡的
+    def CanDead(self) -> bool:
+        return True
 
+    # 死亡触发器,用于技能
+    #   死亡event = {
+    #       "type" : "Death",
+    #       "para" : [UID,OwnNO]
+    #   }
+    #
+    def DeathProcessing(self, event):
         return True
 
     # 转换长字串
     def lstr(self) -> str:
-        return "[{},{},{},{},{},{}]".format(self.UID,self.Type, self.Name, self.Combat(), self.Level, self.Desc)
+        return "[{},{},{},{},{},{}]".format(self.UID, self.Type, self.Name, self.Combat(), self.Level, self.Desc)
 
     # 转换短字串
     def sstr(self) -> str:
-        return "[{},{},{},{}]".format(self.UID,self.Name, self.Combat(), self.Level)
+        return "[{},{},{},{}]".format(self.UID, self.Name, self.Combat(), self.Level)
 
     # 转换dict
     def dict(self) -> dict:
         res = {
-            "Name":self.Name,
-            "Desc":self.Desc,
-            "Type":self.Type,
-            "Combat":self.Combat(),
-            "Label":self.Label,
-            "Level":self.Level,
-            "SelfCombat":self.SelfCombat,
-            "Status":toDict(self.Status),
-            "UID":self.UID,
+            "Name": self.Name,
+            "Desc": self.Desc,
+            "Type": self.Type,
+            "Combat": self.Combat(),
+            "Label": self.Label,
+            "Level": self.Level,
+            "SelfCombat": self.SelfCombat,
+            "Status": toDict(self.Status),
+            "UID": self.UID,
         }
         return res
