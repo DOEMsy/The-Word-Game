@@ -8,6 +8,7 @@ RegistrationCard([
     Unit.Goblin(),
     Unit.TestUnit1(),
     Unit.TestUnit2(),
+    Unit.TestUnit3(),
 
     Skill.FlameStrike(),
 ])

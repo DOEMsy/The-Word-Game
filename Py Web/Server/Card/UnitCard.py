@@ -46,10 +46,10 @@ class UnitCard(Card):
         # 使用技能？
         # 注册触发器？如果有需要的话
 
-        # 注"销"触发器需要看逻辑时机会，
+        # 0.2.1 注"销"触发器需要看逻辑时机会，
         # 例如一个卡牌死亡后自爆，则触发器注销应在触发DeathProcessing中，执行完自爆后再注销
         # 如果注销在 CanDead 函数中，那么将可能无法完成自爆
-        # 再例如一个监视别人死亡的卡牌，则触发器注销可以放在 CanDead 函数中，也可以放在 DeathProcessing 中
+        # 再例如一个监视别人死亡的卡牌，则触发器注销可以放在 Dead 函数中，也可以放在 DeathProcessing 中
         # 但是如果是一张监视出牌的卡片，注册的是其他触发器，DeathProcessing 不会被执行， 那么需要注销就不能放在 DeathProcessing 中
         # 同时 绝大部分正常的卡，场替的时候都要注销触发器
 
@@ -70,17 +70,18 @@ class UnitCard(Card):
     # 受到伤害 基础战力
     def GetDamage(self, num):
         self.SelfCombat -= num
-        if (self.SelfCombat < 0 and self.CanDead()):
-            self.ThisGame.eventMonitoring.Occurrence({
-                "type": "Death",
-                "para":[self.UID,self.OwnNO]
-            })
+        if (self.SelfCombat < 0 and self.Dead()):
+            pass
         else:
             self.SelfCombat = 0
         return True
 
-    # 可死亡的
-    def CanDead(self) -> bool:
+    # 死亡，可以执行这个函数进行即死
+    def Dead(self) -> bool:
+        self.ThisGame.eventMonitoring.Occurrence({
+            "type": "Death",
+            "para": [self.UID, self.OwnNO]
+        })
         return True
 
     # 死亡触发器,用于技能
