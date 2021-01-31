@@ -21,12 +21,11 @@ class UnitCard(Card):
             if (card_uid != self.UID): return False
             to = list(map(int, ins[2:]))
             if (card_type != self.Type):   return False
-            if (3 >= to[0] > 0):
+            if (3 >= to[0] > 0 and self.Debut(to)):
                 player.Lines[to[0] - 1].append(self)
-                self.Debut()
-            elif (-3 <= to[0] < 0):
-                player.OpPlayer.Lines[-1 - to[0]].append(self)
-                self.Debut()
+            # 打到对面牌区
+            # elif (-3 <= to[0] < 0 and self.Debut(to)):
+            #    player.OpPlayer.Lines[-1 - to[0]].append(self)
             else:
                 return False
             return True
@@ -42,15 +41,17 @@ class UnitCard(Card):
         return max(res, 0)  # 最低不能少于0
 
     # 出牌效果
-    def Debut(self) -> bool:
+    def Debut(self, ins) -> bool:
 
-        # 注册触发器，如果有需要的话
+        # 使用技能？
+        # 注册触发器？如果有需要的话
 
         # 注"销"触发器需要看逻辑时机会，
         # 例如一个卡牌死亡后自爆，则触发器注销应在触发DeathProcessing中，执行完自爆后再注销
         # 如果注销在 CanDead 函数中，那么将可能无法完成自爆
         # 再例如一个监视别人死亡的卡牌，则触发器注销可以放在 CanDead 函数中，也可以放在 DeathProcessing 中
         # 但是如果是一张监视出牌的卡片，注册的是其他触发器，DeathProcessing 不会被执行， 那么需要注销就不能放在 DeathProcessing 中
+        # 同时 绝大部分正常的卡，场替的时候都要注销触发器
 
         return True
 
@@ -71,7 +72,8 @@ class UnitCard(Card):
         self.SelfCombat -= num
         if (self.SelfCombat < 0 and self.CanDead()):
             self.ThisGame.eventMonitoring.Occurrence({
-                "type": "Death"
+                "type": "Death",
+                "para":[self.UID,self.OwnNO]
             })
         else:
             self.SelfCombat = 0

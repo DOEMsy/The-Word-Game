@@ -55,11 +55,15 @@ class EventMonitoring(object):
             self.eventLock.release()
 
             if (event != None):
+                self.ThisGame.gameLock.acquire()
                 if (event["type"] == "Death"):
                     # 需要修改游戏数据，获取游戏锁
-                    self.ThisGame.gameLock.acquire()
-                    for key in self.DeathTriggers:
-                        self.DeathTriggers[key].DeathProcessing(event)
-                    self.ThisGame.gameLock.release()
 
-            sleep(0.05)
+                    for key in self.DeathTriggers:
+                        try:
+                            self.DeathTriggers[key].DeathProcessing(event)
+                        except:
+                            pass
+                self.ThisGame.gameLock.release()
+            else:
+                sleep(0.01)

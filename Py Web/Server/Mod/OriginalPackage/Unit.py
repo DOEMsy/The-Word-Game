@@ -1,3 +1,5 @@
+from random import choice
+
 from Card.UnitCard import UnitCard
 
 class Wolf(UnitCard):
@@ -37,3 +39,71 @@ class Goblin(UnitCard):
                 "Humanoid",
             ]
         )
+
+class TestUnit1(UnitCard):
+    def __init__(self):
+        super().__init__(
+            name="老段",
+            desc="OSSA最强战力；技能·无敌：不会受到任何伤害；技能·嗜血：场上每有一个单位死亡，自身基础战斗力+1；",
+            combat=0,
+            level=1,
+            label=[
+                "Humanoid",
+            ]
+        )
+
+    def Debut(self,ins):
+        #注册触发器
+        self.ThisGame.eventMonitoring.BundledDeathTrigger(self)
+        return True
+
+    def GetDamage(self, num):
+        #无法受到伤害
+        return True
+
+    def CanDead(self) -> bool:
+        # 死亡时注销触发器
+        self.ThisGame.eventMonitoring.UnBundledDeathTrigger(self)
+        return True
+
+    def DeathProcessing(self, event):
+        # 检测到别人死亡时战斗力+1
+        UID = event['para'][0]
+        if(UID != self.UID):
+            self.SelfCombat+=1
+
+
+    def ToNextTurn(self):
+        # 场替时注销触发器
+        self.ThisGame.eventMonitoring.UnBundledDeathTrigger(self)
+
+class TestUnit2(UnitCard):
+    def __init__(self):
+        super().__init__(
+            name="炮姐",
+            desc="技能·鸽子：出牌时有50%概率消失",
+            combat=0,
+            level=1,
+            label=[
+                "Humanoid",
+            ]
+        )
+
+    def Play(self, player, ins) -> bool:
+        try:
+            card_type = ins[0]
+            card_uid = int(ins[1])
+            if (card_uid != self.UID): return False
+            to = list(map(int, ins[2:]))
+            if (card_type != self.Type):   return False
+            if (3 >= to[0] > 0 and self.Debut(to)):
+                if(choice([True,False])):
+                    player.Lines[to[0] - 1].append(self)
+            # 打到对面牌区
+            # elif (-3 <= to[0] < 0 and self.Debut(to)):
+            #    player.OpPlayer.Lines[-1 - to[0]].append(self)
+            else:
+                return False
+            return True
+        except:
+            return False

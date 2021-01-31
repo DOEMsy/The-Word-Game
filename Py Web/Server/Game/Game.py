@@ -5,6 +5,7 @@ from copy import deepcopy
 import socket
 import _thread
 from threading import Lock
+from time import sleep
 
 from ExternalLibrary.MsyEvent import EventMonitoring
 from ExternalLibrary.MsySocket import Connet
@@ -130,10 +131,22 @@ class Game(object):
     def DeathProcessing(self, event) -> bool:
         UID = event['para'][0]
         OwnNO = event['para'][1]
-        for i in range(self.Players[OwnNO].Lines):
-            for j in range(self.Players[OwnNO].Lines[i]):
-                if (self.Players[OwnNO].Lines[i][j].UID == UID):
-                    self.Players[OwnNO].Lines[i].pop(j)
+        for line in self.Players[OwnNO].Lines:
+            try:
+                for i in range(len(line)):
+                    try:
+                        card = line[i]
+                        if(card.UID==UID):
+                            line.pop(i)
+                    except:
+                        pass
+            except:
+                pass
+
+        #for i in range(len(self.Players[OwnNO].Lines)):
+        #    for j in range(len(self.Players[OwnNO].Lines[i])):
+        #        if (self.Players[OwnNO].Lines[i][j].UID == UID):
+        #            self.Players[OwnNO].Lines[i].pop(j)
         # 随后发送死亡信号向客户端？暂定
 
         return True
@@ -159,6 +172,7 @@ class Game(object):
 
     # 输出屏幕
     def PrintScreen(self, NO, POPONE=False) -> bool:
+        sleep(0.2)
         self.gameLock.acquire()
         player = self.Players[NO]
         opPlayer = player.OpPlayer
@@ -268,3 +282,4 @@ class Game(object):
             ct += 1
         self.gameLock.release()
         return True
+
