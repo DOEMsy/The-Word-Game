@@ -2,7 +2,7 @@ from Card.Card import *
 
 
 class SkillCard(Card):
-    def __init__(self, name: str, desc: str, level: int, label: []):
+    def __init__(self, name: str, desc: str, level: int, label: set):
         super().__init__(name, desc)
         self.Level = level  # 等级
         self.Label = label  # 标签
@@ -35,7 +35,7 @@ class SkillCard(Card):
 
     # 持续结束？待定
     def Finish(self) -> bool:
-        return True
+        return False
 
     # 场替
     def ToNextTurn(self) -> bool:
@@ -49,3 +49,15 @@ class SkillCard(Card):
     def sstr(self) -> str:
         return "[{},{},{}]".format(self.UID, self.Name, self.Level)
 
+        # 转换dict
+
+    def dict(self) -> dict:
+        res = {
+            "Name": self.Name,
+            "Desc": self.Desc,
+            "Type": self.Type,
+            "Label": list(self.Label),  # json 不允许出现 set
+            "Level": self.Level,
+            "UID": self.UID,
+        }
+        return res

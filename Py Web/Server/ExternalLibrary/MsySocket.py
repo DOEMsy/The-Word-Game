@@ -64,7 +64,10 @@ class Connet(object):
             self.toChanLock.release()
             if (msg != None):
                 self.conn.send(
-                    bytes(json.dumps(msg), encoding="utf-8")
+                    bytes(
+                        # json 不允许出现 set
+                        json.dumps(msg),
+                        encoding="utf-8")
                 )
                 # print("#发送队列指令：", msg)
             sleep(0.05)

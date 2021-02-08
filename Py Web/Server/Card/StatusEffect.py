@@ -4,30 +4,29 @@ from ExternalLibrary.ExternalLibrary import GetUID
 
 class StatusEffect(Card):
 
-    def __init__(self, name: str, desc: str, basisCombatAmend: int, label: [], acctingOnWho=None):
+    def __init__(self, name: str, desc: str, label: set, combatAmend = 0, isHalo=False, acctingOnWho=None):
         super().__init__(name, desc)
 
         self.Type = "StatusEffect"
-        self.BasisCombatAmend = basisCombatAmend  # 战力偏移值
         self.Label = label  # 标签
         self.AcctingOnWho = acctingOnWho  # 作用目标
-
-        #出场作用就有UID
+        self.IsHalo = isHalo  # 是否是光环
+        self.basicCombatAmend = combatAmend
+        # 出场作用就有UID,同一个效果作用在不同单位上UID是相同的?
         self.UID = GetUID()
-
 
     # 对战力作用
     def CombatAmend(self) -> int:
-        return self.BasisCombatAmend
+        return self.basicCombatAmend
 
-    #字典化
-    def dict(self)->dict:
-        return{
+    # 字典化
+    def dict(self) -> dict:
+        return {
             "Name": self.Name,
             "Desc": self.Desc,
             "CombatAmend": self.CombatAmend,
-            "Label": self.Label,
-            "UID":self.UID
+            "Label": list(self.Label), #json 不允许出现 set
+            "UID": self.UID
         }
 
-    #待完善...
+    # 待完善...

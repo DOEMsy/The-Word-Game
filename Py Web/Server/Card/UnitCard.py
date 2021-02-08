@@ -1,15 +1,17 @@
+from copy import deepcopy
+
 from Card.Card import *
 from ExternalLibrary.ExternalLibrary import toDict
 
 
 class UnitCard(Card):
-    def __init__(self, name: str, desc: str, combat: int, level: int, label: []):
+    def __init__(self, name: str, desc: str, combat: int, level: int, label: set):
         super().__init__(name, desc)
         self.SelfCombat = combat  # 基础值战斗力
         self.Level = level  # 等级
         self.Label = label  # 标签
         self.Type = "UnitCard"  # 卡牌类型
-        self.Status = []  # 卡牌状态槽
+        self.Status = dict()  # 卡牌状态槽 {作用UID:作用效果}
 
     # 出牌
     # ins =  [card_type,to...]
@@ -22,7 +24,9 @@ class UnitCard(Card):
             to = list(map(int, ins[2:]))
             if (card_type != self.Type):   return False
             if (3 >= to[0] > 0 and self.Debut(to)):
-                player.Lines[to[0] - 1].append(self)
+                self.ThisGame.AddCardToLine(player,to[0] - 1,self)
+                #player.Lines[to[0] - 1].append(self)
+                #self.ThisGame.UIDCardDict[self.UID] = self
             # 打到对面牌区
             # elif (-3 <= to[0] < 0 and self.Debut(to)):
             #    player.OpPlayer.Lines[-1 - to[0]].append(self)
@@ -36,7 +40,7 @@ class UnitCard(Card):
     def Combat(self) -> int:
         if (self.SelfCombat == 0):  return 0  # 濒死
         res = self.SelfCombat
-        for se in self.Status:
+        for uid,se in self.Status.items():
             res += se.CombatAmend()
         return max(res, 0)  # 最低不能少于0
 
@@ -68,7 +72,7 @@ class UnitCard(Card):
         return True
 
     # 受到伤害 基础战力
-    def GetDamage(self, num):
+    def GetDamage(self, num ,effectLabel):
         self.SelfCombat -= num
         if (self.SelfCombat < 0 and self.Dead()):
             pass
@@ -101,6 +105,19 @@ class UnitCard(Card):
     def sstr(self) -> str:
         return "[{},{},{},{}]".format(self.UID, self.Name, self.Combat(), self.Level)
 
+    # 添加效果
+    def AddStatus(self,status):
+        UID = status.UID
+        self.Status[UID] = deepcopy(status)
+        self.Status[UID].AcctingOnWho = self
+
+    # 移除效果
+    def RemStatus(self,status):
+        try:
+            self.Status.pop(status.UID)
+        except:
+            pass
+
     # 转换dict
     def dict(self) -> dict:
         res = {
@@ -108,7 +125,7 @@ class UnitCard(Card):
             "Desc": self.Desc,
             "Type": self.Type,
             "Combat": self.Combat(),
-            "Label": self.Label,
+            "Label": list(self.Label), #json 不允许出现 set
             "Level": self.Level,
             "SelfCombat": self.SelfCombat,
             "Status": toDict(self.Status),

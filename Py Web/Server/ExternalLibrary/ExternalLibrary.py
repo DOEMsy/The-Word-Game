@@ -99,6 +99,17 @@ def GetRandCard(PropertyRequirements: dict, num: int):
         res.append(deepcopy(choice(cs)))
     return res
 
+# 求随机卡，不重复
+def GetRandUnrepeatCard(PropertyRequirements: dict, num: int):
+    res = []
+    cs = GetCardSet(PropertyRequirements)
+    try:
+        res = sample(cs,min(len(cs),num))
+    except:
+        pass
+
+    return res
+
 
 #全局UID
 GloUID = 15363

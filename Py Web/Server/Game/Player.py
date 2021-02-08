@@ -44,8 +44,7 @@ class Player(object):
         while (ct < num and rawPileSize > 0):
             p = randint(0, rawPileSize - 1)
             card = self.RawPile.pop(p)
-            card.Pump(self.NO)
-            card.ThisGame = self.ThisGame
+            card.Pump(self.NO,self.ThisGame)
             self.HandCards.append(card)
             rawPileSize -= 1
             ct += 1
@@ -76,9 +75,11 @@ class Player(object):
 
     # 结算场上技能
     def SettlementOnCourtSkill(self) -> bool:
+        self.ThisGame.gameLock.acquire()
         for line in self.Lines:
             for card in line:
                 card.OnCourt()
+        self.ThisGame.gameLock.release()
         return True
 
     # 字典化

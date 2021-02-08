@@ -20,9 +20,13 @@ class Game(object):
         self.Players[0].ThisGame = self.Players[1].ThisGame = self
         self.GlobalEffect = []  # [Card...] 全局效果
         self.PlayCardQueue = []  # [Card...] 出牌队列
-        self.DayOrNight = random.choice([True, False])  # 白天？晚上？
+
+        self.RealDayOrNight = random.choice([True, False])  #真实的 白天？晚上？
+        self.DayOrNight = self.RealDayOrNight  #表现的 白天？晚上？
+
         self.NumberOfBoard = 0  # 场次
         self.UID = 1166  # 唯一识别ID
+        self.UIDCardDict = dict() #根据UID快速获取场上卡牌，但是无法用来从战场删除该卡
 
         # server
         self.Host = 0  # str server host
@@ -96,16 +100,16 @@ class Game(object):
                 for card in line:
                     if (not card.ToNextTurn()):
                         tmp.append(card)
-                player.Lines[i] = deepcopy(tmp)
+                player.Lines[i] = tmp
 
         tmp = []
         for card in self.GlobalEffect:
             if (not card.ToNextTurn()):
                 tmp.append(card)
-        self.GlobalEffect = deepcopy(tmp)
+        self.GlobalEffect = tmp
 
         self.NumberOfBoard += 1
-        self.DayOrNight = not self.DayOrNight
+        self.RealDayOrNight = not self.RealDayOrNight
         self.gameLock.release()
         return True
 
@@ -142,6 +146,11 @@ class Game(object):
                         pass
             except:
                 pass
+        try:
+            self.UIDCardDict.pop(UID)
+        except:
+            pass
+
 
         #for i in range(len(self.Players[OwnNO].Lines)):
         #    for j in range(len(self.Players[OwnNO].Lines[i])):
@@ -151,15 +160,29 @@ class Game(object):
 
         return True
 
+    def AddCardToLine(self,player,li,card):
+        card.OwnNO = player.NO
+        card.OwnPlayer = player
+        card.Location = li
+        player.Lines[li].append(card)
+        self.UIDCardDict[card.UID] = card
+
+    def AddCardToGlobal(self,card):
+        card.Location = 3
+        self.GlobalEffect.append(card)
+        self.UIDCardDict[card.UID] = card
+
+
     # 结算轮
     def SettlementRound(self) -> bool:
         self.gameLock.acquire()
+        self.DayOrNight = self.RealDayOrNight
         tmp = []
         for effect in self.GlobalEffect:
             effect.Round()
             if (not effect.Finish()):
                 tmp.append(effect)
-        self.GlobalEffect = deepcopy(tmp)
+        self.GlobalEffect = tmp
         self.gameLock.release()
         return True
 
