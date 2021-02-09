@@ -16,6 +16,8 @@ class Player(object):
         self.Lines = [[] for _ in range(3)]  # list[list[card...]...] 战区
         self.IsAbstain = False  # bool 放弃？
 
+        self.UIDCardDict = dict()  # 根据UID快速获取该玩家战场上的卡牌，由Game完全接管，但是无法用来从战场删除该卡
+
         self.Name = Name  # str 玩家名
         self.NO = NO  # int 玩家编号
         self.Health = 3  # int 玩家生命值
@@ -44,8 +46,23 @@ class Player(object):
         while (ct < num and rawPileSize > 0):
             p = randint(0, rawPileSize - 1)
             card = self.RawPile.pop(p)
-            card.Pump(self.NO,self.ThisGame)
-            self.HandCards.append(card)
+            card.Pump(self)
+            #self.HandCards.append(card)
+            rawPileSize -= 1
+            ct += 1
+        return ct
+
+        # 抽牌，从对方卡堆
+
+    def GetCards_FromOp(self, num) -> int:
+        ct = 0
+        RawPile = self.OpPlayer.RawPile
+        rawPileSize = len(RawPile)
+        while (ct < num and rawPileSize > 0):
+            p = randint(0, rawPileSize - 1)
+            card = RawPile.pop(p)
+            card.Pump(self)
+            #self.HandCards.append(card)
             rawPileSize -= 1
             ct += 1
         return ct
@@ -53,15 +70,13 @@ class Player(object):
     # 弃牌
     def ThrowCards(self, card_is) -> bool:
         if (len(card_is) == 0): return True
-        card_is = list(set(card_is))
+        card_is = list(set(card_is))[::-1]
         if (card_is[0] > len(self.HandCards) - 1):
             return False
         else:
-            i = 0
             for card_i in card_is:
-                self.HandCards[card_i - i].Aban()
-                del self.HandCards[card_i - i]
-                i += 1
+                self.HandCards[card_i].Aban()
+                self.HandCards.pop(card_i)
             return True
 
     # 计算战力

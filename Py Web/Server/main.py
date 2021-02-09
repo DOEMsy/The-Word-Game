@@ -49,7 +49,7 @@ random.shuffle(game.Players[1].RawPile)
 game.Players[0].GetCards(10)
 game.Players[1].GetCards(10)
 
-while (game.NumberOfBoard < 3):
+while (game.NumberOfInnings < 3):
     whoSec = (whoFirst + 1) % 2
     fstPlayer = game.Players[whoFirst]
     secPlayer = game.Players[whoSec]
@@ -69,4 +69,4 @@ while (game.NumberOfBoard < 3):
             # secPlayer.SettlementOnCourtSkill()
             # game.DeathDetection()
             game.CalculateCombat()
-    game.SettlementToNextTurn()
+    game.SettlementToNextInnings()

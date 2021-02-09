@@ -20,6 +20,8 @@ RegistrationCard([
     Unit.PiterJerLfu(),
     Unit.Blueness(),
     Unit.K_902(),
+    Unit.BathFirePhoenix(),
+    Unit.LowerOrderVampire(),
 
     Skill.FlameStrike(),
     Skill.BodyWeak(),
@@ -28,5 +30,6 @@ RegistrationCard([
     Skill.HolyBlessing(),
     Skill.NoSunStone(),
     Skill.LightningStrike(),
+    Skill.TheFinalBattle(),
 ])
 

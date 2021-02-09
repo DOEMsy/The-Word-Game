@@ -12,6 +12,7 @@ class StatusEffect(Card):
         self.AcctingOnWho = acctingOnWho  # 作用目标
         self.IsHalo = isHalo  # 是否是光环
         self.basicCombatAmend = combatAmend
+        self.ThisGame = None
         # 出场作用就有UID,同一个效果作用在不同单位上UID是相同的?
         self.UID = GetUID()
 
@@ -24,7 +25,7 @@ class StatusEffect(Card):
         return {
             "Name": self.Name,
             "Desc": self.Desc,
-            "CombatAmend": self.CombatAmend,
+            "CombatAmend": self.CombatAmend(),
             "Label": list(self.Label), #json 不允许出现 set
             "UID": self.UID
         }

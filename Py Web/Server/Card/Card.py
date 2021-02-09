@@ -15,12 +15,13 @@ class Card(object):
 
     # 抽入手中，返回值必须为True
     # 普通卡牌抽入手中才有UID
-    def Pump(self,NO,game) -> bool:
+    def Pump(self,player) -> bool:
         self.UID = GetUID()
         self.Location = -1
-        self.OwnNO = NO
-        self.ThisGame = game
-        self.OwnPlayer = self.ThisGame.Players[NO]
+        self.OwnNO = player.NO
+        self.ThisGame = player.ThisGame
+        self.OwnPlayer = player
+        self.OwnPlayer.HandCards.append(self)
         return True
 
     # 在手上

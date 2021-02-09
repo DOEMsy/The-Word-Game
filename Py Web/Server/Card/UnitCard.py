@@ -74,10 +74,12 @@ class UnitCard(Card):
     # 受到伤害 基础战力
     def GetDamage(self, num ,effectLabel):
         self.SelfCombat -= num
-        if (self.SelfCombat < 0 and self.Dead()):
-            pass
-        else:
-            self.SelfCombat = 0
+        if (self.SelfCombat < 0):
+            if(self.Dead()):
+                pass
+            # 如果不死，默认战斗力归0，否者将优先遵循Dead()中对战斗力的设定
+            elif(self.SelfCombat < 0):
+                self.SelfCombat = 0
         return True
 
     # 死亡，可以执行这个函数进行即死
@@ -99,7 +101,7 @@ class UnitCard(Card):
 
     # 转换长字串
     def lstr(self) -> str:
-        return "[{},{},{},{},{},{}]".format(self.UID, self.Type, self.Name, self.Combat(), self.Level, self.Desc)
+        return "[{},{},{},{},{},\n{}]".format(self.UID, self.Type, self.Name, self.Combat(), self.Level, self.Desc)
 
     # 转换短字串
     def sstr(self) -> str:
@@ -110,6 +112,7 @@ class UnitCard(Card):
         UID = status.UID
         self.Status[UID] = deepcopy(status)
         self.Status[UID].AcctingOnWho = self
+        self.Status[UID].ThisGame = self.ThisGame
 
     # 移除效果
     def RemStatus(self,status):
@@ -128,7 +131,7 @@ class UnitCard(Card):
             "Label": list(self.Label), #json 不允许出现 set
             "Level": self.Level,
             "SelfCombat": self.SelfCombat,
-            "Status": toDict(self.Status),
+            "Status": toDict(list(self.Status.values())),
             "UID": self.UID,
         }
         return res

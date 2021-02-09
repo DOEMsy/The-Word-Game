@@ -119,3 +119,7 @@ def GetUID():
     global GloUID
     GloUID += 1
     return GloUID
+
+#常量
+#不施法标识，对于任何选定型技能，使用这个表示该技能打空
+NoSpell = -15442

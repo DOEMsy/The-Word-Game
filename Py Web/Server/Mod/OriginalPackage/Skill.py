@@ -1,5 +1,5 @@
 from copy import deepcopy
-from random import randint
+from random import randint, choice
 
 from Card.SkillCard import SkillCard
 from Card.UnitCard import UnitCard
@@ -217,4 +217,36 @@ class LightningStrike(SkillCard):
             )
             return True
         except:
+            return False
+
+
+# --------------- 终焉之战 -----------------
+
+class TheFinalBattle(SkillCard):
+    def __init__(self):
+        self.get_card_num = 10
+        super().__init__(
+            name="终焉之战",
+            desc="◇神术：这是一张神术牌\n"
+                 "◇决战：该牌只能在第三场打出;\n"
+                 "◇终焉：对场上所有的单位卡和全局效果卡做场替判定，重新随机日月，双方玩家弃掉所有手牌，随后各自抽取{}张新的手牌;"
+                 "".format(self.get_card_num),
+            level=5,
+            label={
+                "神术"
+            }
+        )
+
+    def Debut(self, ins) -> bool:
+        # 决战
+        if (self.ThisGame.NumberOfInnings == 2):
+            # 终焉
+            self.ThisGame.InningsReplacement()
+            self.ThisGame.RealDayOrNight = choice([True, False])
+            self.OwnPlayer.ThrowCards(range(len(self.OwnPlayer.HandCards)))
+            self.OwnPlayer.OpPlayer.ThrowCards(range(len(self.OwnPlayer.HandCards)))
+            self.OwnPlayer.GetCards(self.get_card_num)
+            self.OwnPlayer.OpPlayer.GetCards(self.get_card_num)
+            return True
+        else:
             return False

@@ -21,12 +21,13 @@ class Game(object):
         self.GlobalEffect = []  # [Card...] 全局效果
         self.PlayCardQueue = []  # [Card...] 出牌队列
 
-        self.RealDayOrNight = random.choice([True, False])  #真实的 白天？晚上？
-        self.DayOrNight = self.RealDayOrNight  #表现的 白天？晚上？
+        self.RealDayOrNight = random.choice([True, False])  # 真实的 白天？晚上？
+        self.DayOrNight = self.RealDayOrNight  # 表现的 白天？晚上？
 
-        self.NumberOfBoard = 0  # 场次
+        self.NumberOfInnings = 0  # 场次
         self.UID = 1166  # 唯一识别ID
-        self.UIDCardDict = dict() #根据UID快速获取场上卡牌，但是无法用来从战场删除该卡
+        self.UIDCardDict = dict()  # 根据UID快速获取场上卡牌，但是无法用来从战场删除该卡
+        self.UIDCardDict_GlobalEffect = dict()  # 根据UID快速获取场上全局效果，但是无法用来从战场删除该效果
 
         # server
         self.Host = 0  # str server host
@@ -83,34 +84,47 @@ class Game(object):
         self.gameLock.release()
         return True
 
-    # 场替
-    def SettlementToNextTurn(self) -> bool:
+    # 结算局
+    def SettlementToNextInnings(self) -> bool:
         self.gameLock.acquire()
         minCombat = min(self.Players[0].TolCombat, self.Players[1].TolCombat)
         for player in self.Players:
             if (player.TolCombat == minCombat):
                 player.Health -= 1
 
+        self.InningsReplacement()
+
+        self.NumberOfInnings += 1
+        self.RealDayOrNight = not self.RealDayOrNight
+        self.gameLock.release()
+        return True
+
+    # 场替，上层调用函数一定被加锁
+    def InningsReplacement(self) -> bool:
+        tmp_UIDCardDict = dict()
         for NO in range(2):
             player = self.Players[NO]
             player.IsAbstain = False
+            tmp_pUIDCardDict = dict()
+            tmp_lines = [[], [], []]
             for i in range(3):
-                tmp = []
                 line = player.Lines[i]
                 for card in line:
                     if (not card.ToNextTurn()):
-                        tmp.append(card)
-                player.Lines[i] = tmp
+                        tmp_lines[i].append(card)
+                        tmp_pUIDCardDict[card.UID] = card
+                        tmp_UIDCardDict[card.UID] = card
+            player.Lines = tmp_lines
+            player.UIDCardDict = tmp_pUIDCardDict
+        self.UIDCardDict = tmp_UIDCardDict
 
-        tmp = []
+        tmp_GloalEffect = []
+        tmp_UIDGlabalEffect = dict()
         for card in self.GlobalEffect:
             if (not card.ToNextTurn()):
-                tmp.append(card)
-        self.GlobalEffect = tmp
-
-        self.NumberOfBoard += 1
-        self.RealDayOrNight = not self.RealDayOrNight
-        self.gameLock.release()
+                tmp_GloalEffect.append(card)
+        self.GlobalEffect = tmp_GloalEffect
+        self.UIDCardDict_GlobalEffect = tmp_UIDGlabalEffect
         return True
 
     # 死亡检测（0.2.0+ 弃用）
@@ -140,7 +154,7 @@ class Game(object):
                 for i in range(len(line)):
                     try:
                         card = line[i]
-                        if(card.UID==UID):
+                        if (card.UID == UID):
                             line.pop(i)
                     except:
                         pass
@@ -150,9 +164,12 @@ class Game(object):
             self.UIDCardDict.pop(UID)
         except:
             pass
+        try:
+            self.Players[OwnNO].UIDCardDict.pop(UID)
+        except:
+            pass
 
-
-        #for i in range(len(self.Players[OwnNO].Lines)):
+        # for i in range(len(self.Players[OwnNO].Lines)):
         #    for j in range(len(self.Players[OwnNO].Lines[i])):
         #        if (self.Players[OwnNO].Lines[i][j].UID == UID):
         #            self.Players[OwnNO].Lines[i].pop(j)
@@ -160,18 +177,18 @@ class Game(object):
 
         return True
 
-    def AddCardToLine(self,player,li,card):
+    def AddCardToLine(self, player, li, card):
         card.OwnNO = player.NO
         card.OwnPlayer = player
         card.Location = li
         player.Lines[li].append(card)
+        player.UIDCardDict[card.UID] = card
         self.UIDCardDict[card.UID] = card
 
-    def AddCardToGlobal(self,card):
+    def AddCardToGlobal(self, card):
         card.Location = 3
         self.GlobalEffect.append(card)
-        self.UIDCardDict[card.UID] = card
-
+        self.UIDCardDict_GlobalEffect[card.UID] = card
 
     # 结算轮
     def SettlementRound(self) -> bool:
@@ -226,17 +243,17 @@ class Game(object):
         else:
             oup += "It's NOT you turn,you can't move\n"
 
-        oup += "You are Player{} now，Board {}\n".format(NO + 1, self.NumberOfBoard)
+        oup += "You are Player{} now，Board {}\n".format(NO + 1, self.NumberOfInnings)
         oup += "HandCards:\n"
         card_i = 0
         for card in player.HandCards:
-            oup += "{}. {},\n".format(card_i, card.lstr())
+            oup += "{}. {},\n\n".format(card_i, card.lstr())
             card_i += 1
 
         dic = {
             "GlobalEffect": [],
             "DayOrNight": self.DayOrNight,
-            "NumberOfBoard": self.NumberOfBoard,
+            "NumberOfBoard": self.NumberOfInnings,
             "PlayCardQueue": [],
             "Player": [
                 self.Players[0].dict(),
@@ -305,4 +322,3 @@ class Game(object):
             ct += 1
         self.gameLock.release()
         return True
-

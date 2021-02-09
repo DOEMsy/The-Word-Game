@@ -3,7 +3,7 @@ from random import choice, randint
 
 from Card.StatusEffect import StatusEffect
 from Card.UnitCard import UnitCard
-from ExternalLibrary.ExternalLibrary import GetUID
+from ExternalLibrary.ExternalLibrary import GetUID, NoSpell
 from Game.Label import Has
 from Mod.OriginalPackage import Effect
 
@@ -134,11 +134,12 @@ class Doppler(UnitCard):
     # to = ins = [local,target_UID]
     def Debut(self, ins) -> bool:
         try:
-            card = self.ThisGame.UIDCardDict[ins[1]]
-            self.Name = card.Name + "（变形怪）"
-            self.SelfCombat = card.SelfCombat
-            self.Label = deepcopy(card.Label)
-            self.Level = card.Level
+            if(ins[1]!=NoSpell):
+                card = self.ThisGame.UIDCardDict[ins[1]]
+                self.Name = card.Name + "（变形怪）"
+                self.SelfCombat = card.SelfCombat
+                self.Label = deepcopy(card.Label)
+                self.Level = card.Level
         except:
             return False
 
@@ -191,7 +192,7 @@ class OneEyedGhoul(UnitCard):
     def __init__(self):
         self.skill_carrion_increased_combat = 4
         super().__init__(
-            name="巨型食尸鬼",
+            name="独眼食尸鬼",
             desc="食尸鬼的亚种，面部只有一只眼睛，体型较小，但成长迅速；\n"
                  "◇食尸：战场上每有一张牌死亡，自身基础战斗力+{}"
                  "".format(self.skill_carrion_increased_combat),
@@ -318,7 +319,7 @@ class BigWolf(UnitCard):
     def __init__(self):
         self.night_combat_add = 2
         super().__init__(
-            name="狼",
+            name="座狼",
             desc="森林中的狼王\n"
                  "◇夜行：附带有夜行效果,在夜晚这个单位的战斗力+{},".format(self.night_combat_add),
             combat=5,
@@ -361,7 +362,7 @@ class GoblinKing(UnitCard):
                  "◇界者：这家伙是一名界者，拥有超越普通个体极限数倍的能力；\n"
                  "◇森林军团：出牌时，对方战场每有一张单位牌，则在己方随机战线召唤一只森林单位，最多{}只；\n"
                  "◇咆哮鼓舞：出牌时，为己方所有单位施加鼓舞效果，战斗力+{}；"
-                 "".format(self.combat_up, self.max_summon_num),
+                 "".format(self.max_summon_num, self.combat_up),
             combat=11,
             level=4,
             label={
@@ -372,20 +373,16 @@ class GoblinKing(UnitCard):
 
     def Debut(self, ins) -> bool:
         # 森林军团
-        num = 0
-        for line in self.OwnPlayer.OpPlayer.Lines:
-            num += len(line)
-        num = min(num, self.max_summon_num)
-        randomSummon = {Goblin(), Wolf(), GiantGoblin()}
+        num = min(len(self.OwnPlayer.OpPlayer.UIDCardDict), self.max_summon_num)
+        randomSummon = [Goblin(), Wolf(), GiantGoblin()]
         for i in range(num):
             card = deepcopy(choice(randomSummon))
             card.UID = GetUID()
             self.ThisGame.AddCardToLine(self.OwnPlayer, randint(0, 2), card)
 
         # 王之战术
-        for line in self.OwnPlayer.Lines:
-            for card in line:
-                card.AddStatus(self.combat_up_effect)
+        for card in self.OwnPlayer.UIDCardDict.values():
+            card.AddStatus(self.combat_up_effect)
 
         return True
 
@@ -446,11 +443,13 @@ class Blueness(UnitCard):
 
     def Debut(self, ins) -> bool:
         try:
-            card = self.ThisGame.UIDCardDict[ins[1]]
-            card.GetDamage(self.assassinate_dmg, ["计略"])
+            if(ins[1]!=NoSpell):
+                card = self.ThisGame.UIDCardDict[ins[1]]
+                card.GetDamage(self.assassinate_dmg, {"计略"})
             return True
         except:
-            return False
+            #可以不选中单位
+            return True
 
 
 # --------------- K-902 -----------------
@@ -463,7 +462,7 @@ class K_902(UnitCard):
             name="K-902",
             desc="罕见的机械族，拥有高度知性和传说装备的巨大人形武器\n"
                  "◇应激反魔法装甲：受到的魔法伤害减少{}%\n"
-                 "◇终末作战模式展开: 在最后一局时打出，基础作战力 +{}"
+                 "◇终焉作战模式展开: 在第三场时打出，基础作战力 +{}"
                  "".format(self.magic_dmg_off * 100, self.basis_combat_add),
             combat=9,
             level=4,
@@ -473,7 +472,7 @@ class K_902(UnitCard):
         )
 
     def Debut(self, ins) -> bool:
-        if (self.ThisGame.NumberOfBoard == 2):
+        if (self.ThisGame.NumberOfInnings == 2):
             self.SelfCombat += self.basis_combat_add
         return True
 
@@ -486,3 +485,67 @@ class K_902(UnitCard):
         else:
             self.SelfCombat = 0
         return True
+
+
+# --------------- 浴火凤凰 -----------------
+
+class BathFirePhoenix(UnitCard):
+    def __init__(self):
+        self.is_egg = False
+        super().__init__(
+            name="浴火凤凰",
+            desc="传说中的不死神兽\n"
+                 "◇长生：无视场替\n"
+                 "◇不死：死亡时变成一颗凤凰蛋，战斗力归0，并在下一场复活",
+            combat=11,
+            level=4,
+            label={
+                "自然",
+            }
+        )
+
+    def Dead(self) -> bool:
+        # 不死
+        self.is_egg = True
+        self.Name = "凤凰蛋"
+        return False
+
+    def ToNextTurn(self) -> bool:
+        # 不死
+        if (self.is_egg):
+            self.is_egg = False
+            self.Name = "浴火凤凰"
+            self.SelfCombat = 11
+            self.Level = 4
+            self.Label.add("自然")
+        # 长生
+        return False
+
+
+# --------------- 低阶吸血鬼 -----------------
+
+class LowerOrderVampire(UnitCard):
+    def __init__(self):
+        self.night_combat_add = 4
+        super().__init__(
+            name="低阶吸血鬼",
+            desc="血缘下贱的下等吸血鬼\n"
+                 "◇长生：无视场替\n"
+                 "◇伪装：擅长伪装成人类，具有人类属性\n"
+                 "◇夜行：附带有夜行效果,在夜晚这个单位的战斗力+{},".format(self.night_combat_add),
+            combat=3,
+            level=3,
+            label={
+                "血族", "人类"
+            }
+        )
+        self.effect = Effect.Nocturnal(self.night_combat_add)
+
+    def Debut(self, ins) -> bool:
+        self.AddStatus(self.effect)
+        return True
+
+    def ToNextTurn(self) -> bool:
+        return False
+
+# ---------------  -----------------

@@ -10,8 +10,8 @@ port = 0
 comSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 scrSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 while True:
-    host = input()
-    #host = "192.168.1.101"
+    #host = input()
+    host = "192.168.1.101"
     if re.match(r'^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$', host):
         port = [27015, 27016]
         comSocket.connect((host, port[0]))
