@@ -7,6 +7,7 @@ class EventMonitoring(object):
     def __init__(self):
         self.ThisGame = None
         self.events = []  # 总线
+        self.events_size = 0 # 总线大小
         self.DeathTriggers = {}  # 死亡触发器
         '''
             event = [
@@ -26,6 +27,7 @@ class EventMonitoring(object):
     def Occurrence(self, event: dict):
         self.eventLock.acquire()
         self.events.append(event)
+        self.events_size+=1
         self.eventLock.release()
 
     # 注册死亡触发器
@@ -50,6 +52,7 @@ class EventMonitoring(object):
             self.eventLock.acquire()
             try:
                 event = self.events.pop(0)
+                self.events_size -= 1
             except:
                 pass
             self.eventLock.release()
@@ -67,3 +70,12 @@ class EventMonitoring(object):
                 self.ThisGame.gameLock.release()
             else:
                 sleep(0.01)
+
+    #等待事件总线为空
+    def WaitingForEventsEmpty(self):
+        while(True):
+            sleep(0.2)
+            self.eventLock.acquire()
+            tmp = self.events_size
+            self.eventLock.release()
+            if(tmp==0): return

@@ -66,16 +66,18 @@ for key, value in list(Labels.items()):
 # 卡牌是否具有标签
 def Is(label, card) -> bool:
     if (card.Type in {"UnitCard", "SkillCard"}):
-        if (type(label) == str):    label = Labels[label]
+        lbnum = 0
+        if (type(label) == str):    lbnum = Labels[label]
+        else:   lbnum = label
         # 查询泛用标签
-        if (label % 10 == 0):
+        if (lbnum % 10 == 0):
             for lb in card.Label:
-                if (Labels[lb] // 10 == label):
+                if (Labels[lb] // 10 * 10 == lbnum):
                     return True
             return False
         # 查询准确标签
         else:
-            return card.Label.get(label) != None
+            return label in card.Label
     else:
         return False
 

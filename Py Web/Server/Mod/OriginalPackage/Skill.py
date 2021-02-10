@@ -16,7 +16,7 @@ class FlameStrike(SkillCard):
         self.maxDamage = 4
         super().__init__(
             name="烈焰风暴",
-            desc="对全场所有单位造成{}-{}点伤害"
+            desc="对全场所有单位造成{}-{}点魔法伤害"
                  "".format(self.minDamage, self.maxDamage),
             level=3,
             label={
@@ -33,13 +33,11 @@ class FlameStrike(SkillCard):
         #        for j in range(len(line)):
         #            card = line[j]
         #            card.GetDamage(self.damage)
-        for player in self.ThisGame.Players:
-            for line in player.Lines:
-                for card in line:
-                    card.GetDamage(
-                        randint(self.minDamage, self.maxDamage),
-                        self.Label
-                    )
+        for card in self.ThisGame.UIDCardDict.values():
+            card.GetDamage(
+                randint(self.minDamage, self.maxDamage),
+                self.Label
+            )
         return True
 
 
@@ -89,9 +87,8 @@ class SoulFusion(SkillCard):
         try:
             label = set()
             combat = 0
-            li = abs(ins[0])
             tarPlayer = self.OwnPlayer if (ins[0] > 0) else self.OwnPlayer.OpPlayer
-
+            li = abs(ins[0]) - 1
             for card in tarPlayer.Lines[li]:
                 try:
                     if (card.Dead()):
@@ -112,7 +109,7 @@ class SoulFusion(SkillCard):
                 label=label
             ))
             monster.UID = GetUID()
-            self.ThisGame.AddCardToLine(tarPlayer, li - 1, monster)
+            self.ThisGame.AddCardToLine(tarPlayer, li, monster)
 
             return True
 
@@ -148,7 +145,7 @@ class HolyBlessing(SkillCard):
         super().__init__(
             name="神圣祝福",
             desc="增加目标单位最多{}点基础战斗力，对等级越高的敌人影响越低\n"
-                 "◇圣吟：对不死者和恶魔将造成伤害"
+                 "◇圣吟：对不死者和恶魔将造成圣吟伤害"
                  "".format(self.max_add_combat),
             level=2,
             label={
@@ -157,16 +154,13 @@ class HolyBlessing(SkillCard):
         )
 
     def Debut(self, ins) -> bool:
-        try:
-            card = self.ThisGame.UIDCardDict[ins[0]]
-            add = self.max_add_combat - card.Level + 1
-            if (Is("恶魔", card) or Is("不死者", card)):
-                card.GetDamage(add, self.Label)
-            else:
-                card.SelfCombat += add
-            return True
-        except:
-            return False
+        card = self.ThisGame.UIDCardDict[ins[0]]
+        add = self.max_add_combat - card.Level + 1
+        if (Is("恶魔", card) or Is("不死者", card)):
+            card.GetDamage(add, self.Label)
+        else:
+            card.SelfCombat += add
+        return True
 
 
 # --------------- 吞日 -----------------
@@ -201,7 +195,7 @@ class LightningStrike(SkillCard):
         self.min_dmg = 3
         super().__init__(
             name="雷击",
-            desc="使用闪电对目标进行打击，造成{}~{}点伤害"
+            desc="使用闪电对目标进行打击，造成{}~{}点魔法伤害"
                  "".format(self.min_dmg, self.max_dmg),
             level=2,
             label={
@@ -227,7 +221,8 @@ class TheFinalBattle(SkillCard):
         self.get_card_num = 10
         super().__init__(
             name="终焉之战",
-            desc="◇神术：这是一张神术牌\n"
+            desc="从这张牌洗入牌堆开始，命运就已经被扭曲了\n"
+                 "◇神术：这是一张神术牌\n"
                  "◇决战：该牌只能在第三场打出;\n"
                  "◇终焉：对场上所有的单位卡和全局效果卡做场替判定，重新随机日月，双方玩家弃掉所有手牌，随后各自抽取{}张新的手牌;"
                  "".format(self.get_card_num),

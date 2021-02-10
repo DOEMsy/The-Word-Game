@@ -49,8 +49,18 @@ class Game(object):
         self.gameLock.acquire()
         self.Host = "192.168.1.101"  # socket.gethostname()
         self.Port = [27015, 27016]
+        # 长时间连接会断开？
         self.comServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.scrServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # 要求长时间保持存活
+        self.comServer.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE,True)
+        self.comServer.ioctl(socket.SIO_KEEPALIVE_VALS,(1,60*1000,30*1000)) #每60秒发送探测包
+
+        self.scrServer.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE,True)
+        self.scrServer.ioctl(socket.SIO_KEEPALIVE_VALS,(1,60*1000,30*1000)) #每60秒发送探测包
+
+
         self.comServer.bind((self.Host, self.Port[0]))
         self.scrServer.bind((self.Host, self.Port[1]))
         self.comServer.listen(2)
@@ -205,6 +215,7 @@ class Game(object):
 
     # 结算战斗力
     def CalculateCombat(self):
+        self.eventMonitoring.WaitingForEventsEmpty()
         self.gameLock.acquire()
         self.Players[0].CalculateCombat()
         self.Players[1].CalculateCombat()
@@ -212,7 +223,6 @@ class Game(object):
 
     # 输出屏幕
     def PrintScreen(self, NO, POPONE=False) -> bool:
-        sleep(0.2)
         self.gameLock.acquire()
         player = self.Players[NO]
         opPlayer = player.OpPlayer
@@ -255,7 +265,7 @@ class Game(object):
             "DayOrNight": self.DayOrNight,
             "NumberOfBoard": self.NumberOfInnings,
             "PlayCardQueue": [],
-            "Player": [
+            "Players": [
                 self.Players[0].dict(),
                 self.Players[1].dict(),
             ],

@@ -43,11 +43,11 @@ class SkillCard(Card):
 
     # 转换长字串，待完善
     def lstr(self) -> str:
-        return "[{},{},{},{},\n{}]".format(self.UID, self.Type, self.Name, self.Level, self.Desc)
+        return "[{},{},{},lv{},\n{}]".format(self.UID, self.Type, self.Name, self.Level, self.Desc)
 
     # 转换短字串，待完善
     def sstr(self) -> str:
-        return "[{},{},{}]".format(self.UID, self.Name, self.Level)
+        return "[{},{},lv{}]".format(self.UID, self.Name, self.Level)
 
         # 转换dict
 

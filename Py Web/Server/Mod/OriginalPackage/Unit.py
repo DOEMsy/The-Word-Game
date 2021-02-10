@@ -140,6 +140,7 @@ class Doppler(UnitCard):
                 self.SelfCombat = card.SelfCombat
                 self.Label = deepcopy(card.Label)
                 self.Level = card.Level
+            return True
         except:
             return False
 
@@ -432,7 +433,7 @@ class Blueness(UnitCard):
         super().__init__(
             name="青",
             desc="◇雾行者：这家伙是雾行者刺客\n"
-                 "◇刺杀：对目标单位造成{}点伤害"
+                 "◇刺杀：对目标单位造成{}点计略伤害"
                  "".format(self.assassinate_dmg),
             combat=5,
             level=3,

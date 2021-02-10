@@ -101,11 +101,18 @@ class UnitCard(Card):
 
     # 转换长字串
     def lstr(self) -> str:
-        return "[{},{},{},{},{},\n{}]".format(self.UID, self.Type, self.Name, self.Combat(), self.Level, self.Desc)
+        return "[{},{},{},{},lv{},\n{}]".format(self.UID, self.Type, self.Name, self.Combat(), self.Level, self.Desc)
 
     # 转换短字串
     def sstr(self) -> str:
-        return "[{},{},{},{}]".format(self.UID, self.Name, self.Combat(), self.Level)
+        # return "[{},{},{},lv{}]".format(self.UID, self.Name, self.Combat(), self.Level)
+        cbt = self.Combat()
+        res = ""
+        res += "[{},{},{}".format(self.UID, self.Name, self.SelfCombat)
+        if(cbt>self.SelfCombat):    res += "(+{})".format(cbt-self.SelfCombat)
+        if(cbt<self.SelfCombat):    res += "(-{})".format(self.SelfCombat-cbt)
+        res += ",lv{}]".format(self.Level)
+        return res
 
     # 添加效果
     def AddStatus(self,status):

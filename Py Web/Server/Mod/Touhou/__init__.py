@@ -11,3 +11,4 @@ RegistrationCard([
     Unit.KonpakuYoumu(),
     Unit.Cirno(),
 ])
+
