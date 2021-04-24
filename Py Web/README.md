@@ -7,16 +7,19 @@
     * [x] 制定 json 规则	
     * [x] 手造消息队列
     * [x] 协程轮询接收 socket 消息
+  
 * 2021.1.26
   * 加入 TCP 消息缓冲队列
   * 重构三层出牌函数
   * TCP 传输改用 Json 数据包
+  
 * 2021.1.27
   * 制定 json 传输规则
   * 近期目标：
     * [ ] 完善Mod开发手册
     * [ ] 完善客户端开发手册
     * [x] 实现技能卡牌相关功能
+  
 * 2021.1.28
   * 补充通信规则
   * 近期目标：
@@ -24,12 +27,16 @@
       * [x] 完善事件系统（事件驱动模型 ）
         * [x] 公共监视器
         * [x] 独立监视器
+  
 * 2021.1.29
+  
   * 设计架构，为事件系统做准备
+  
 * 2021.1.30
   * 大量重构架构
   * 初步完成公共监视器
   * 完成死亡监视器
+  
 * 2021.1.31
   * 事件以及监视器系统完成
   * 近期目标
@@ -38,243 +45,479 @@
       * [x] 带触发的单位卡
       * [x] 技能卡
       * [x] 带召唤的技能卡
+  
 * 2021.2.9
   * 再次大规模重构，以适应后续的技能实现
   * 改进了抽牌算法，保证不会出现重复卡牌
+  
 * 2021.2.10
   * 修复单位被施加BUFF游戏中断的bug
   * 加入了东方Project相关的卡包扩展
+  
 * 2021.2.11
   * 修复了部分卡牌的bug
   * 添加心跳包保证服务器支持长连接
+  * 优化了主进程等待逻辑，保证事件处理完成之前不会抢占资源
+  
+* 2021.2.12
+  
+  * 临时添加了消息系统
+  
+* 2021.2.14
+  
+  * 修改了牌库机制，允许需要卡牌重复，但是视为不同卡牌
+  
+* 2021.3.11
 
-## 服务端数据通信规则 *v0.2.1*
+  * 再版通信规则，移植部分逻辑到客户端
+
+  
+
+  
+
+## 服务端数据通信规则 *v0.5.0*
 
 服务器开放有两个端口 指令通信端口 和 屏幕通信端口
 
 > 两个玩家共用一套通信端口，但拥有各自独立的通信Channel
 
-### 指令通信
+### 异步线程通信（屏幕通信）
 
-频繁传输处理短小的指令，作为客户端和服务器相互通信的主要手段，
+* 开始游戏信息
 
-由 指令通信端口 `27015` 发送和接受，数据包采用 json ，有特定结构
+  * 对局信息
+    * 对局模式
+    * 双方玩家信息
 
-```json
-{
-	"ins":"",
-	"para":[
-        "",
-        "",
-        ...
-    ]
-}
-```
+  ```json
+  {
+      "ins":"game_start",
+      "mode":"normal",
+   	"players":[
+          {
+              "NO":"0",
+              "Name":"玩家1",
+              "Desc":"座右铭1",
+              "Health":2,
+          },{
+              "NO":"1",
+              "Name":"玩家2",
+              "Desc":"座右铭2",
+          	"Health":2,
+          }
+      ]
+  }
+  ```
 
-* `ins` 项为字符串，表示指令串
-* `para` 项为字符串数组，表示指令串尾随的参数们 
+  
 
+* 卡牌变动
 
+  * 己方加牌（S）
+    * 牌信息
+      * 牌类型（给位置-单位，不给位置-技能）
+      * 卡牌技能 指定单位
+        * 数量
+        * 是否可空
+      * 卡牌技能 指定行
+        * 数量
+        * 是否可空
+      * 待定
+      * 内容负责指示 出牌操作
 
-#### inp
+  **技能牌**
 
-出牌信号，由服务器向客户端发送，表示客户端可以出牌，并反馈出牌步骤
+  ```python
+  {
+      "ins":"card_pump",
+      "card":{
+          "Name":"name",
+          "Desc":"desc",
+          "Type":"SkillCard",
+          "Label":["label"],
+          "OwnNO":0,
+          "Level":0,
+      	"UID":"UID",
+          
+          # 释放目标需求，[选目标数，必须选全，选行数目，必须选全]
+         	"UnleashOp":[0,False,0,False],
+          # 需要选择多少张牌进行献祭，（随机献祭不算在内）
+          "SelDedication":0,
+      },
+  }
+  ```
 
-发出信号后，服务器将接收处理最近一次的 pop 或者 giveup 信号
+  **单位牌**
 
-```json
-{
-    "ins":"inp",
-	"para":[
-        "轮到你了，请出牌",
-        "0"
-    ]
-}
-```
+  ```python
+  {
+  	"ins":"card_pump",
+  	"card":{
+  		"Name":"name",
+          "Desc":"desc",
+          "Type":"UnitCard",
+          "Label":["label"],
+          "OwnNO":0,
+          "Level":0,
+      	"UID":"UID",
+          # 能够放置的行
+          "CantoLines":[1,2,3],
+         	"SelfCombat":0,
+          "Combat":0,
+          "Status":[
+              StatusEffect1,
+              StatusEffect2,
+              StatusEffect3,
+          ]
+          # 释放目标需求，[选目标数，必须选全，选行数目，必须选全]
+         	"UnleashOp":[0,fasle,0,fasle],
+          # 需要选择多少张牌进行献祭，（随机献祭不算在内）
+          "SelDedication":0,
+  	}
+  }
+  ```
 
-* `para[0]` 为服务器自然语言反馈
-* `para[1]` 表示上次出牌是否错误，0 = False，>0 = True
+  其中 StatusEffect 内容为
 
+  ```python
+  {
+      "Name":"name",
+      "Desc":"desc",
+      "UID":"UID",
+      "Type":"StatusEffect",
+      # 效果类型 0：未知，1：战斗力增益，2：战斗力减益，3：护盾
+      "Effect":0,
+      # 作用效果值
+      "Value":0,
+      "Label":["label"]
+  }
+  ```
 
+  
 
-#### end
+  * 更新卡牌信息（S）
 
-游戏结束信号，由服务器向客户端发送，表示游戏结束
+    * 卡牌上场
 
-```json
-{
-    "ins":"end",
-    "para":[
-        "游戏结束",
-        "0"
-    ]
-}
-```
+    ```python
+    {
+        "ins":"card_to_line",
+    	"card":UnitCard,
+        "To":1,
+    }
+    ```
+    
+  * 卡牌基础战斗力增加
+    
+  ```python
+    {
+    	"ins":"card_add_combat",
+        "para":{
+            "UID":"UID",
+            "Value":0,
+        }
+  }
+  ```
 
-* `para[0]` 为服务器自然语言反馈
-* `para[1]` 表示胜利方，0 = 玩家1，1 = 玩家2 ，2 = 平局，3 = 错误
+    * 卡牌受伤
 
+    ```python
+    {
+    	"ins":"card_get_damage",
+        "para":{
+            "UID":"UID",
+            "Value":0,
+        }
+    }
+    ```
 
+    * 卡牌描述变化
+      * 效果变化（状态效果变化）
+      
+      **效果施加**
+      
+      ```python
+      {
+          "ins":"card_effect_add",
+          "card":{
+              "Name":"name",
+              "Desc":"desc",
+              "UID":"UID",
+              "Type":"StatusEffect",
+              # 效果类型 0：未知，1：战斗力增益，2：战斗力减益，3：护盾
+              "Effect":0,
+              # 作用效果值
+              "Value":0,
+              "Label":["label"]
+          }
+      }
+      ```
+      
+      **效果消除**
+      
+      ```python
+      {
+          "ins":"card_effect_del",
+          "para":{
+              "CardUID":"cardUID",
+          	"StauUID":"stauUID",
+          }
+      }
+      ```
+      
+      **效果变化**
+      
+      ```python
+      {
+          "ins":"card_effect_value_change",
+          "para":{
+              "CardUID":"cardUID",
+          	"StauUID":"stauUID",
+              # 可省略参数
+              "Name":"change_name",
+              "Desc":"change_desc",
+              "Label":"change_label",
+              "Value":0,
+              "Label":["label"],
+          }
+      }
+      ```
+      
+      * 描述变化
+      
+      ```Python
+      {
+          "ins":"card_change",
+          "para":{
+              "UID":"UID",
+              # 可省略参数
+              "Name":"change_name",
+              "Desc":"change_desc",
+              "Label":["label"],
+              "Level":"change_level",
+              "SelfCombat":0,
+          }
+      }
+      ```
+      
+    * 卡牌退场
+      * 单位死亡
+      
+      ```python
+      {
+          "ins":"card_dead",
+          "para":{
+              "UID":"UID",
+          }
+      }
+      ```
+      
+      * 单位场替
+      
+      ```python
+      {
+          "ins":"card_selturn",
+          "para":{
+              "UID":"UID",
+          }
+      }
+      ```
+      
+    * 卡牌位置变化
 
-#### scr
+    ```python
+    {
+        "ins":"card_selturn",
+        "para":{
+            "UID":"UID",
+            # 目标行 -3 -2 -1 1 2 3
+            "To":1,
+        }
+    }
+    ```
 
-屏幕通信信号，由服务器向客户端发送，表示游戏对局屏幕发生改变，需要更新
+    * 弃牌
 
-```json
-{
-    "ins":"scr",
-    "para":[]
-}
-```
+    ```python
+    {
+    	"ins":"card_throw",
+    	"para":{
+    		"ThrowList":[
+    			"UID1",
+    			"UID2",
+    			"UID3",
+    			...
+    		]
+    	}
+    }
+    ```
 
-在发出信号同时服务器会发送 屏幕通信包
+* 玩家变化（S）
 
+  * 墓地数量变化
 
+  ```python
+  {
+      "ins":"player_unitGraveSize_change",
+  	"para":{
+  		"PlayerNO":0,
+  		"Change":0,
+      }
+  }
+  ```
 
-#### prt
+  * 抽牌堆数量变化
 
-显示通信信号，由服务器向客户端发送，包含一些提示信息
+  ```python
+  {
+      "ins":"player_rawPileSize_change",
+  	"para":{
+  		"PlayerNO":0,
+  		"Change":0,
+      }
+  }
+  ```
 
-```json
+  * 玩家名称变化
+
+  ```python
+  {
+      "ins":"player_name_change",
+  	"para":{
+  		"PlayerNO":0,
+  		"Change":"name",
+      }
+  }
+  ```
+
+* 对局变化（S）
+
+  * 对局信息变化
+    * 场替
+
+      * 场次
+      * 胜负
+
+      ```python
+      {
+          "ins":"game_toNextInnings",
+      	"para":{
+      		"WinerNO":0,
+          }
+      }
+      ```
+
+    * 全局效果
+
+      **效果施加**
+
+      ```python
+      {
+          "ins":"game_effect_add",
+          "card":{
+              "Name":"name",
+              "Desc":"desc",
+              "Type":"SkillCard",
+              "Label":["label"],
+              "Level":0,
+          	"UID":"UID",
+          }
+      }
+      ```
+
+      **效果消除**
+
+      ```python
+      {
+          "ins":"game_effect_del",
+          "para":{
+          	"UID":"UID",
+          }
+      }
+      ```
+
+      **效果变化**
+
+      ```python
+      {
+          "ins":"game_effect_value_change",
+          "para":{
+              "UID":"UID",
+              # 可省略参数
+              "Name":"change_name",
+              "Desc":"change_desc",
+              "Label":["label"],
+              "Level":"change_level",
+          }
+      }
+      ```
+
+    * ~~双方战斗力~~
+
+      ```python
+      {
+          
+      }
+      ```
+
+* 消息提示（S）
+
+```python
 {
     "ins":"prt",
-    "para":[
-        "请调整下眉毛位置",
-        ...
-    ]
-}
-```
-
-
-
-#### pop
-
-出牌信号，在客户端接收到 inp 信号后可以发送一次，与 giveup 冲突，由客户端向服务器发送，表示出牌步骤，服务器将处理反馈是否合法
-
-不和法的出牌步骤将无效，并再次向客户端发送一次 inp 信号
-
-```json
-{
-    "ins":"pop",
-    "para":[
-        "0",
-        "UnitCard",
-        "15363",
-        "1",
-        ...
-    ]
-}
-```
-
-* `para[0]` 表示被出牌在手牌中的下标
-* `para[1]` 表示被出牌的类型
-* `para[2]` 表示被出手牌的UID
-* `para[3: ]` 表示出牌步骤，不同类型的卡牌有不同的出牌步骤规则
-
-
-
-#### giveup
-
-弃权信号，在客户端接收到 inp 信号后可以发送一次，与 pop 冲突，由客户端向服务器发送，表示弃权本场对局（一共三场，三局两胜）
-
-```json
-{
-    "ins":"giveup",
-    "para":[]
-}
-```
-
-
-
-
-
-### 屏幕通信
-
-由  屏幕通信端口 `27016` 发送，*本端口可以接收数据，但不会做任何处理*
-
-#### 对局包
-
-由服务器发出，较大的数据包，其中包括一整套的对局当前信息和屏幕信息
-
-服务器在发出 对局包 前会提前发送 scr 信号
-
-```json
-{	
-    "scr":"",
-    "dic":{
-        
+    "para":{
+        "msg":"message",
     }
 }
 ```
 
-* `scr`  项为字符串，是游戏对局屏幕的字符画形式，可以直接输出在屏幕上作为客户端屏幕显示
-* `dic` 项为字典，其中包括了全部游戏对局的信息
+### 主线程通信（指令通信）
 
-#### scr 示例
+* 玩家行动（C）
+  
+  * 出牌
+  
+  ```python
+  {
+      "ins":"pop",
+      "para":{
+          "card_i":0,
+          "card_uid":"UID",
+          "card_type":"type",
+          "to":0,
+          "targetUIDs":[],
+          "targetLines":[],
+          "selDedicUIDs":[],
+      }
+  }
+  ```
+  
+  * 放弃
+  
+  ```python
+  {
+  	"ins":"giveup",
+  	"para":{
+  	
+  	}
+  }
+  ```
+  
+* 行动指示（S）
 
-```
-3: 
-2: 
-1: 
------------NA:Player1 CO:0, HE:3 GV:False CP:10 ----------
-Night
-Gl: 
------------NA:Player2 CO:0, HE:3 GV:False CP:10 ----------
-1: 
-2: 
-3: 
-It's you turn
-You are Player2 now，Board 0
-HandCards:
-0. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-1. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
-2. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-3. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-4. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-5. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
-6. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
-7. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
-8. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-9. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-```
+  * 请出牌
 
+  ```python
+  {
+      "ins":"inp",
+      "para":{
+          "msg":"",
+          "ct":0,
+      }
+  }
+  ```
 
-
-#### dic 示例
-
-```json
-{
-    "GlobalEffect":[],
-    "DayOrNight":true,
-    "NumberOfBoard":0,
-    "PlayCardQueue": [],
-    "Player":[
-        {
-            "HandCards":[],
-            "RawPileSize":20,
-            "UnitGrave":[],
-            "Lines":[[],[],[]],
-            "Name":"Msy",
-            "NO":0,
-            "Health":3,
-            "TolCombat":0
-        },
-        {
-            "HandCards":[],
-            "RawPileSize":20,
-            "UnitGrave":[],
-            "Lines":[[],[],[]],
-            "Name":"BladeHiker",
-            "NO":1,
-            "Health":3,
-            "TolCombat":0
-        }
-    ],
-    "YourNum":0,
-}
-```
-
-
+  
 
 ## 单位卡战斗力
 

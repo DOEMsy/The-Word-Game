@@ -3,12 +3,12 @@ from Mod.Touhou import Unit
 from Mod.Touhou import Skill
 
 
-RegistrationCard([
+RegistrationCard(
     Unit.HakureiReimu(),
     Unit.TataraKogasa(),
     Unit.TataraKogasaFake(),
     Unit.KirisameMarisa(),
     Unit.KonpakuYoumu(),
     Unit.Cirno(),
-])
+)
 

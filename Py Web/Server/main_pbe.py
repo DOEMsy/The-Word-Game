@@ -8,9 +8,12 @@ import Mod
 import time
 import random
 
+from Mod.OriginalPackage.Skill import LuckyCoin
+from Mod.OriginalPackage.Unit import Irinas
+
+
 seed = int(time.time())
 random.seed(seed)
-
 game = Game()
 game.StartServer()
 
@@ -35,19 +38,10 @@ print(    GetRandUnrepeatCard({
 
 os.system("pause")
 '''
-paidui = GetRandCard({"Type": "UnitCard", }, 40) \
-         + GetRandCard({"Type": "SkillCard", }, 20)
-
-random.shuffle(paidui)
-# for cd in paidui:
-#     print(cd.Name)
-
-game.Players[0].RawPile = paidui[0:len(paidui) // 2]
-
-game.Players[1].RawPile = paidui[len(paidui) // 2:]
-
-random.shuffle(game.Players[0].RawPile)
-random.shuffle(game.Players[1].RawPile)
+game.Players[0].Pump(Irinas().Concre())
+game.Players[0].Pump(LuckyCoin().Concre())
+game.Players[1].Pump(Irinas().Concre())
+game.Players[1].Pump(LuckyCoin().Concre())
 
 # test↑
 

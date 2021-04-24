@@ -7,8 +7,11 @@ class EventMonitoring(object):
     def __init__(self):
         self.ThisGame = None
         self.events = []  # 总线
-        self.events_size = 0 # 总线大小
-        self.DeathTriggers = {}  # 死亡触发器
+        self.events_size = 0  # 总线大小
+        self.Triggers = {
+            "Death":{},
+            "Pop":{},
+        }  # 触发器
         '''
             event = [
                 {
@@ -27,20 +30,20 @@ class EventMonitoring(object):
     def Occurrence(self, event: dict):
         self.eventLock.acquire()
         self.events.append(event)
-        self.events_size+=1
+        self.events_size += 1
         self.eventLock.release()
 
-    # 注册死亡触发器
-    def BundledDeathTrigger(self, trigger):
+    # 注册触发器
+    def BundledTrigger(self, type, trigger):
         self.eventLock.acquire()
-        self.DeathTriggers[trigger.UID] = trigger
+        self.Triggers[type][trigger.UID] = trigger
         self.eventLock.release()
 
-    # 注销死亡触发器
-    def UnBundledDeathTrigger(self, trigger):
+    # 注销触发器
+    def UnBundledTrigger(self, type, trigger):
         self.eventLock.acquire()
         try:
-            self.DeathTriggers.pop(trigger.UID)
+            self.Triggers[type].pop(trigger.UID)
         except:
             pass
         self.eventLock.release()
@@ -58,24 +61,34 @@ class EventMonitoring(object):
             self.eventLock.release()
 
             if (event != None):
+                # 需要修改游戏数据，获取游戏锁
                 self.ThisGame.gameLock.acquire()
+                # 单位死亡
                 if (event["type"] == "Death"):
-                    # 需要修改游戏数据，获取游戏锁
-
-                    for key in self.DeathTriggers:
+                    for trig in list(self.Triggers[event["type"]].values()):
                         try:
-                            self.DeathTriggers[key].DeathProcessing(event)
+                            trig.DeathProcessing(event)
                         except:
                             pass
+                # 玩家出牌
+                elif (event["type"] == "Pop"):
+                    for trig in list(self.Triggers[event["type"]].values()):
+                        try:
+                            trig.PopProcessing(event)
+                        except:
+                            pass
+                # 待定
+                elif (event["type"] == "?"):
+                    pass
                 self.ThisGame.gameLock.release()
             else:
                 sleep(0.01)
 
-    #等待事件总线为空
+    # 等待事件总线为空
     def WaitingForEventsEmpty(self):
-        while(True):
+        while (True):
             sleep(0.2)
             self.eventLock.acquire()
             tmp = self.events_size
             self.eventLock.release()
-            if(tmp==0): return
+            if (tmp == 0): return

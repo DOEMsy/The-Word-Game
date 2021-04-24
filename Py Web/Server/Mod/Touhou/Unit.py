@@ -2,7 +2,7 @@ from copy import deepcopy
 from random import sample, choice, randint
 import numpy as np
 from Card.UnitCard import UnitCard
-from ExternalLibrary.ExternalLibrary import NoSpell
+from ExternalLibrary.ExternalLibrary import NoSpell, ConcretizationCard
 
 
 # --------------- 博丽灵梦 -----------------
@@ -22,17 +22,22 @@ class HakureiReimu(UnitCard):
             level=3,
             label={
                 "人类",
-            }
+            },
+            canto={2},
         )
 
-    def Debut(self, ins) -> bool:
+    def _debut(self, ins) -> bool:
         # 追踪符札
         for _ in range(self.max_num_attack):
-            target = choice(list(self.OwnPlayer.OpPlayer.UIDCardDict.values()))
-            target.GetDamage(self.attack_dmg, {"魔法"})
-
+            try:
+                target = choice(list(self.OwnPlayer.OpPlayer.UIDCardDict.values()))
+                target.GetDamage(self.attack_dmg, {"魔法"})
+            except:
+                # 有可能选不到目标
+                pass
         # 阴阳玉
-        self.SelfCombat += self.combat_add
+        # self.SelfCombat += self.combat_add
+        self.AddSelfCombat(self.combat_add,{"物理"})
 
         return True
 
@@ -51,10 +56,11 @@ class TataraKogasa(UnitCard):
             level=3,
             label={
                 "妖精"
-            }
+            },
+            canto={1},
         )
 
-    def Debut(self, ins) -> bool:
+    def _debut(self, ins) -> bool:
         for target in self.ThisGame.UIDCardDict.values():
             try:
                 if (np.random.choice([
@@ -84,10 +90,11 @@ class TataraKogasaFake(UnitCard):
             level=3,
             label={
                 "妖精"
-            }
+            },
+            canto={1},
         )
 
-    def Debut(self, ins) -> bool:
+    def _debut(self, ins) -> bool:
         # 替身
         self.Name = "某人形"
         self.Desc = "◇机械：某种人形作战兵器，具有机械属性\n" \
@@ -106,8 +113,8 @@ class TataraKogasaFake(UnitCard):
 class KirisameMarisa(UnitCard):
     def __init__(self):
         self.get_card_num = 1
-        self.boom_max_dmg = 3
-        self.boom_min_dmg = 1
+        self.boom_max_dmg = 2
+        self.boom_min_dmg = 4
         super().__init__(
             name="雾雨魔理沙",
             desc="性格恶劣有严重收集癖的魔法使，好像是某个作品系列的主角DA☆ZE\n"
@@ -118,20 +125,19 @@ class KirisameMarisa(UnitCard):
             level=3,
             label={
                 "人类"
-            }
+            },
+            canto={2},
         )
 
-    def Debut(self, ins) -> bool:
-        try:
-            # 魔法道具,可以选择不使用
-            if (ins[1] != NoSpell):
-                target = self.ThisGame.UIDCardDict[ins[1]]
-                target.GetDamage(randint(self.boom_min_dmg, self.boom_max_dmg), {"魔法"})
-            # 暂时借走
-            self.OwnPlayer.GetCards_FromOp(self.get_card_num)
-            return True
-        except:
-            return False
+    def _debut(self, ins) -> bool:
+        # 魔法道具,可以选择不使用
+        if (ins[1] != NoSpell):
+            # bug? ↓
+            target = self.ThisGame.UIDCardDict[ins[1]]
+            target.GetDamage(randint(self.boom_min_dmg, self.boom_max_dmg), {"魔法"})
+        # 暂时借走
+        self.OwnPlayer.GetCards_FromOp(self.get_card_num)
+        return True
 
 
 # --------------- 魂魄妖梦 -----------------
@@ -149,11 +155,13 @@ class KonpakuYoumu(UnitCard):
             level=3,
             label={
                 "人类", "幽灵"
-            }
+            },
+            canto={1},
         )
 
-    def Debut(self, ins) -> bool:
-        self.SelfCombat += self.combat_add
+    def _debut(self, ins) -> bool:
+        # self.SelfCombat += self.combat_add
+        self.AddSelfCombat(self.combat_add,{"特性"})
         return True
 
 
@@ -171,7 +179,8 @@ class Cirno(UnitCard):
             level=3,
             label={
                 "妖精"
-            }
+            },
+            canto={1},
         )
         self.summon = UnitCard(
             name="冻青蛙",
@@ -183,8 +192,8 @@ class Cirno(UnitCard):
             }
         )
 
-    def Debut(self, ins) -> bool:
+    def _debut(self, ins) -> bool:
         for _ in range(self.frog_num):
-            card = deepcopy(self.summon)
+            card = ConcretizationCard(self.summon)
             card.Pump(self.OwnPlayer)
         return True

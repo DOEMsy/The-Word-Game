@@ -7,8 +7,10 @@ import _thread
 from threading import Lock
 from time import sleep
 
+from ExternalLibrary.ExternalLibrary import GetUID, Throw_VisualizationError
 from ExternalLibrary.MsyEvent import EventMonitoring
 from ExternalLibrary.MsySocket import Connet
+from Game.Console import Console
 from Game.Player import Player
 
 
@@ -41,25 +43,30 @@ class Game(object):
         self.gameLock = Lock()  # 游戏锁
         self.eventMonitoring = EventMonitoring()  # 总线
         self.eventMonitoring.ThisGame = self
-        self.eventMonitoring.BundledDeathTrigger(self)  # 绑定game的死亡触发器
+        self.eventMonitoring.BundledTrigger("Death", self)  # 绑定game的死亡触发器
+
+        # 控制台
+        self.console = Console(self)
 
     # 开启游戏服务器
     def StartServer(self) -> bool:
+        # Console Socket
+        _thread.start_new_thread(self.console.StartServer,())
+
         # P2 Socket
         self.gameLock.acquire()
-        self.Host = "192.168.1.101"  # socket.gethostname()
-        self.Port = [27015, 27016]
+        self.Host = "192.168.1.116"  # socket.gethostname()
+        self.Port = [27018, 27019]
         # 长时间连接会断开？
         self.comServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.scrServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # 要求长时间保持存活
-        self.comServer.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE,True)
-        self.comServer.ioctl(socket.SIO_KEEPALIVE_VALS,(1,60*1000,30*1000)) #每60秒发送探测包
+        self.comServer.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, True)
+        self.comServer.ioctl(socket.SIO_KEEPALIVE_VALS, (1, 60 * 1000, 30 * 1000))  # 每60秒发送探测包
 
-        self.scrServer.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE,True)
-        self.scrServer.ioctl(socket.SIO_KEEPALIVE_VALS,(1,60*1000,30*1000)) #每60秒发送探测包
-
+        self.scrServer.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, True)
+        self.scrServer.ioctl(socket.SIO_KEEPALIVE_VALS, (1, 60 * 1000, 30 * 1000))  # 每60秒发送探测包
 
         self.comServer.bind((self.Host, self.Port[0]))
         self.scrServer.bind((self.Host, self.Port[1]))
@@ -72,7 +79,7 @@ class Game(object):
         print("P1已经连接: ", self.PComClient[0].addr)
         self.PComClient[0].Send({
             "ins": "prt",
-            "para": ["成功连接到服务器，等待p2"]
+            "para": {"msg":"成功连接到服务器，等待p2",}
         })
         print("等待P2连接...")
         self.PComClient.append(Connet(self.comServer.accept()))
@@ -81,16 +88,19 @@ class Game(object):
         print("游戏开始")
         self.PComClient[1].Send({
             "ins": "prt",
-            "para": ["成功连接到服务器"]
+            "para": {"msg":"成功连接到服务器"}
         })
-        self.PComClient[0].Send({
-            "ins": "prt",
-            "para": ["游戏开始"]
-        })
-        self.PComClient[1].Send({
-            "ins": "prt",
-            "para": ["游戏开始"]
-        })
+        # 开始游戏
+        for comClient in self.PComClient:
+            comClient.Send({
+                "ins": "game_start",
+                "mode": "normal",
+                "players":[
+                    self.Players[0].pack(),
+                    self.Players[1].pack(),
+                ],
+                "para":[],
+            })
         self.gameLock.release()
         return True
 
@@ -101,6 +111,9 @@ class Game(object):
         for player in self.Players:
             if (player.TolCombat == minCombat):
                 player.Health -= 1
+                player.GetCards(3)  # 失败者获取3张牌
+            else:
+                player.GetCards(5)  # 胜利者获取5张牌
 
         self.InningsReplacement()
 
@@ -120,10 +133,13 @@ class Game(object):
             for i in range(3):
                 line = player.Lines[i]
                 for card in line:
+                    # 每个卡场替的操作只执行了一次
                     if (not card.ToNextTurn()):
                         tmp_lines[i].append(card)
                         tmp_pUIDCardDict[card.UID] = card
                         tmp_UIDCardDict[card.UID] = card
+                    else:
+                        self.Players[NO].UnitGrave.append(card)
             player.Lines = tmp_lines
             player.UIDCardDict = tmp_pUIDCardDict
         self.UIDCardDict = tmp_UIDCardDict
@@ -158,7 +174,7 @@ class Game(object):
     #   }
     def DeathProcessing(self, event) -> bool:
         UID = event['para'][0]
-        OwnNO = event['para'][1]
+        OwnNO = event['para'][1].OwnPlayer.NO
         for line in self.Players[OwnNO].Lines:
             try:
                 for i in range(len(line)):
@@ -166,6 +182,9 @@ class Game(object):
                         card = line[i]
                         if (card.UID == UID):
                             line.pop(i)
+                            self.Print_Message(
+                                self.Players[OwnNO].Name + " 的单位 " + self.UIDCardDict[UID].Name + "(" + str(
+                                    UID) + ")" + " 死亡")
                     except:
                         pass
             except:
@@ -175,6 +194,7 @@ class Game(object):
         except:
             pass
         try:
+            self.Players[OwnNO].UnitGrave.append(self.Players[OwnNO].UIDCardDict[UID])
             self.Players[OwnNO].UIDCardDict.pop(UID)
         except:
             pass
@@ -188,9 +208,15 @@ class Game(object):
         return True
 
     def AddCardToLine(self, player, li, card):
+        if (not card.visualization):
+            # 没有具象化，不允许使用
+            Throw_VisualizationError(card)
         card.OwnNO = player.NO
         card.OwnPlayer = player
         card.Location = li
+        card.ThisGame = self
+        # 对没有存入牌库的卡牌，赋予UID
+        if (card.UID == -1):   card.UID = GetUID()
         player.Lines[li].append(card)
         player.UIDCardDict[card.UID] = card
         self.UIDCardDict[card.UID] = card
@@ -278,7 +304,7 @@ class Game(object):
         })
         self.PScrClient[NO].Send({
             "scr": oup,
-            "dic": dic
+            "dic": dic,
         })
 
         self.gameLock.release()
@@ -300,10 +326,16 @@ class Game(object):
                         str(ct)
                     ]
                 })
+                if (ct == 0):
+                    self.PComClient[abs(NO - 1)].Send({
+                        "ins": "prt",
+                        "para": ["等待对手出牌..."]
+                    })
                 inp = self.PComClient[NO].GetRev()
                 ins = inp["ins"]
                 if (ins == "giveup"):
                     player.IsAbstain = True
+                    self.Print_Message(player.Name + " 弃权了 ")
                     break
                 elif (ins == "pop"):
                     '''
@@ -332,3 +364,24 @@ class Game(object):
             ct += 1
         self.gameLock.release()
         return True
+
+    def Print_Message(self, msg: str):
+        self.PComClient[0].Send({
+            "ins": "prtQ",
+            "para": [msg]
+        })
+        self.PComClient[1].Send({
+            "ins": "prtQ",
+            "para": [msg]
+        })
+        return True
+
+    def NormalEnd(self):
+        os.system("pause")
+        return True
+
+    def com_card_pump(self,card):
+        self.PScrClient[card.OwnNO].Send({
+            "ins":"card_pump",
+            "card":card.pack(),
+        })

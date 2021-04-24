@@ -8,7 +8,7 @@ from time import sleep
 
 # TCPConn通道类(socket.accept())
 class Connet(object):
-    def __init__(self, para: []):
+    def __init__(self, para: [], islog = True):
         self.conn = para[0]  # tcp_conn
         self.addr = para[1]  # (host,port)
         self.toChan = []  # 发送消息channel
@@ -18,6 +18,7 @@ class Connet(object):
         # loop = asyncio.get_event_loop()
         # loop.run_until_complete([self.send(), self.rev()])
         # loop.close()
+        self.islog = islog
         _thread.start_new_thread(self.send, ())  # 轮询监听发送消息
         _thread.start_new_thread(self.rev, ())  # 轮询监听接收消息
 
@@ -33,7 +34,7 @@ class Connet(object):
                 pass
             self.bkChanLock.release()
             if (res != None):
-                print("#提取指令：", res)
+                if(self.islog): print("#提取指令：", res)
                 return res
             else:
                 sleep(0.05)
@@ -50,7 +51,7 @@ class Connet(object):
         self.toChanLock.acquire()
         self.toChan.append(msg)
         self.toChanLock.release()
-        print("#推入指令：", msg)
+        if(self.islog): print("#推入指令：", msg)
 
     # 从 channel 推出并发送一位数据至conn
     def send(self):
@@ -66,7 +67,7 @@ class Connet(object):
                 self.conn.send(
                     bytes(
                         # json 不允许出现 set
-                        json.dumps(msg),
+                        json.dumps(msg,ensure_ascii=False),
                         encoding="utf-8")
                 )
                 # print("#发送队列指令：", msg)
