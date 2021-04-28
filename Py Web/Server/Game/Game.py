@@ -20,7 +20,7 @@ class Game(object):
         self.Players[0].OpPlayer = self.Players[1]
         self.Players[1].OpPlayer = self.Players[0]
         self.Players[0].ThisGame = self.Players[1].ThisGame = self
-        self.GlobalEffect = []  # [Card...] 全局效果
+        self.GlobalCard = []  # [Card...] 全局卡
         self.PlayCardQueue = []  # [Card...] 出牌队列
 
         self.RealDayOrNight = random.choice([True, False])  # 真实的 白天？晚上？
@@ -51,7 +51,7 @@ class Game(object):
     # 开启游戏服务器
     def StartServer(self) -> bool:
         # Console Socket
-        _thread.start_new_thread(self.console.StartServer,())
+        _thread.start_new_thread(self.console.StartServer, ())
 
         # P2 Socket
         self.gameLock.acquire()
@@ -79,7 +79,7 @@ class Game(object):
         print("P1已经连接: ", self.PComClient[0].addr)
         self.PComClient[0].Send({
             "ins": "prt",
-            "para": {"msg":"成功连接到服务器，等待p2",}
+            "para": {"msg": "成功连接到服务器，等待p2", }
         })
         print("等待P2连接...")
         self.PComClient.append(Connet(self.comServer.accept()))
@@ -88,18 +88,18 @@ class Game(object):
         print("游戏开始")
         self.PComClient[1].Send({
             "ins": "prt",
-            "para": {"msg":"成功连接到服务器"}
+            "para": {"msg": "成功连接到服务器"}
         })
         # 开始游戏
         for comClient in self.PComClient:
             comClient.Send({
                 "ins": "game_start",
                 "mode": "normal",
-                "players":[
+                "players": [
                     self.Players[0].pack(),
                     self.Players[1].pack(),
                 ],
-                "para":[],
+                "para": [],
             })
         self.gameLock.release()
         return True
@@ -113,7 +113,7 @@ class Game(object):
                 player.Health -= 1
                 player.GetCards(3)  # 失败者获取3张牌
             else:
-                player.GetCards(5)  # 胜利者获取5张牌
+                player.GetCards(3)  # 胜利者获取3张牌
 
         self.InningsReplacement()
 
@@ -146,10 +146,10 @@ class Game(object):
 
         tmp_GloalEffect = []
         tmp_UIDGlabalEffect = dict()
-        for card in self.GlobalEffect:
+        for card in self.GlobalCard:
             if (not card.ToNextTurn()):
                 tmp_GloalEffect.append(card)
-        self.GlobalEffect = tmp_GloalEffect
+        self.GlobalCard = tmp_GloalEffect
         self.UIDCardDict_GlobalEffect = tmp_UIDGlabalEffect
         return True
 
@@ -211,19 +211,24 @@ class Game(object):
         if (not card.visualization):
             # 没有具象化，不允许使用
             Throw_VisualizationError(card)
-        card.OwnNO = player.NO
-        card.OwnPlayer = player
-        card.Location = li
-        card.ThisGame = self
-        # 对没有存入牌库的卡牌，赋予UID
-        if (card.UID == -1):   card.UID = GetUID()
-        player.Lines[li].append(card)
-        player.UIDCardDict[card.UID] = card
-        self.UIDCardDict[card.UID] = card
+        try:
+            card.OwnNO = player.NO
+            card.OwnPlayer = player
+            card.Location = li
+            card.ThisGame = self
+            # 对没有存入牌库的卡牌，赋予UID
+            if (card.UID == -1):   card.UID = GetUID()
+            player.Lines[li].append(card)
+            player.UIDCardDict[card.UID] = card
+            self.UIDCardDict[card.UID] = card
+            card.SelftoLineOn()
+        except Exception as e:
+            print("card to line error", repr(e))
 
     def AddCardToGlobal(self, card):
         card.Location = 3
-        self.GlobalEffect.append(card)
+        self.GlobalCard.append(card)
+        card.SelftoLineOn()
         self.UIDCardDict_GlobalEffect[card.UID] = card
 
     # 结算轮
@@ -231,13 +236,45 @@ class Game(object):
         self.gameLock.acquire()
         self.DayOrNight = self.RealDayOrNight
         tmp = []
-        for effect in self.GlobalEffect:
+        for effect in self.GlobalCard:
             effect.Round()
-            if (not effect.Finish()):
+            if (True):
                 tmp.append(effect)
-        self.GlobalEffect = tmp
+        self.GlobalCard = tmp
         self.gameLock.release()
         return True
+
+    # 注册 存在时效果
+    def RegisterExisEffect(self, card):
+        # 要求必须是有主卡牌 否者报错
+        try:
+            tarlines = card.ExiEffectOn
+            selfPlayer = self.Players[card.OwnNO - 1]
+            for li in tarlines:
+                if (0 < li <= 3):
+                    selfPlayer.RegisterLineExisEffect(card, li - 1)
+                elif (-3 <= li < 0):
+                    selfPlayer.OpPlayer.RegisterLineExisEffect(card, -li - 1)
+
+        except Exception as e:
+            print("game register card exisEffect error.", "playerNO:", card.OwnNO, ",cardUID:", card.UID, ",",
+                  repr(e))
+
+    # 注销 存在时效果
+    def UnRegisterExisEffect(self, card):
+        # 要求必须是有主卡牌 否者报错
+        try:
+            tarlines = card.ExiEffectOn
+            selfPlayer = self.Players[card.OwnNO - 1]
+            for li in tarlines:
+                if (0 < li <= 3):
+                    selfPlayer.UnRegisterLineExisEffect(card, li - 1)
+                elif (-3 <= li < 0):
+                    selfPlayer.OpPlayer.UnRegisterLineExisEffect(card, -li - 1)
+
+        except Exception as e:
+            print("game unregister card exisEffect error.", "playerNO:", card.OwnNO, ",cardUID:", card.UID, ",",
+                  repr(e))
 
     # 结算战斗力
     def CalculateCombat(self):
@@ -263,7 +300,7 @@ class Game(object):
                                                                                len(opPlayer.HandCards))
         oup += "{}\n".format("Day" if (self.DayOrNight) else "Night")
         oup += "Gl: "
-        for gl in self.GlobalEffect:
+        for gl in self.GlobalCard:
             oup += "{},".format(gl.sstr())
         oup += '\n'
         oup += "-----------NA:{} CO:{}, HE:{} GV:{} CP:{} ----------\n".format(player.Name, player.TolCombat,
@@ -380,8 +417,8 @@ class Game(object):
         os.system("pause")
         return True
 
-    def com_card_pump(self,card):
-        self.PScrClient[card.OwnNO].Send({
-            "ins":"card_pump",
-            "card":card.pack(),
+    def com_card_pump(self, card):
+        self.PScrClient[card.OwnNO - 1].Send({
+            "ins": "card_pump",
+            "card": card.pack(),
         })

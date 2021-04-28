@@ -28,6 +28,19 @@ class SkillCard(Card):
             print("card play error:", repr(e))
             return False
 
+
+    # 自施加效果启动，在部署到战场上时被调用
+    def SelftoLineOn(self):
+        self._selftoLineOn()
+        # 注册存在时效果
+        if(len(self.ExiEffectOn)>0):
+            self.ThisGame.RegisterExisEffect(self)
+        return True
+
+    # 返回值一定是 true
+    def _selftoLineOn(self):
+        return True
+
     # 出牌效果
     def Debut(self, ins) -> bool:
         try:
@@ -52,16 +65,26 @@ class SkillCard(Card):
     def _round(self) -> bool:
         return True
 
-    # 持续结束？待定
+    # 效果结束，相当于 Unit 中的 Dead
     def Finish(self) -> bool:
-        return self._finish()
+        if (self._finish()):
+            # 注销存在时效果
+            if (len(self.ExiEffectOn) > 0):
+                self.ThisGame.UnRegisterExisEffect(self)
+            return True
+        return False
 
     def _finish(self) -> bool:
-        return False
+        return True
 
     # 场替
     def ToNextTurn(self) -> bool:
-        return self._toNextTurn()
+        if(self._toNextTurn()):
+            # 注销存在时效果
+            if (len(self.ExiEffectOn) > 0):
+                self.ThisGame.UnRegisterExisEffect(self)
+            return True
+        return False
 
     def _toNextTurn(self) -> bool:
         return True

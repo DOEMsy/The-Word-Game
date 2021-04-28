@@ -13,6 +13,7 @@ class Card(object):
         self.ThisGame = None  # 本局游戏
         self.Location = -2  # 位置  -2 未出现 , -1 手牌 , 0 1 2 战线 ,3 全局效果
         self.visualization = False  # 具象化，没有具象化的卡牌不允许使用
+        self.ExiEffectOn = [] # 存在时效果作用范围 3 2 1 -1 -2 -3
 
     # 抽入手中，返回值必须为True
     def Pump(self, player) -> bool:
@@ -45,9 +46,28 @@ class Card(object):
     def _aban(self) -> bool:
         return True
 
+    # 存在时效果
+    def ExiEffect(self,target):
+        return self._exiEffect(target)
+
+    # 返回效果作用值
+    def _exiEffect(self,target):
+        return 0
+
+    # 自我施加效果启动，在部署到战场上时被调用
+
+    def SelftoLineOn(self):
+        if (self._selftoLineOn()):
+            return True
+        return False
+
+    def _selftoLineOn(self):
+        return True
+
     # 具现化
     def Concre(self):
         return ConcretizationCard(self)
+
 
     # 字符串
     def __str__(self) -> str:

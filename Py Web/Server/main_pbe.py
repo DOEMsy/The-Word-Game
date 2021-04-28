@@ -8,9 +8,8 @@ import Mod
 import time
 import random
 
-from Mod.OriginalPackage.Skill import LuckyCoin
-from Mod.OriginalPackage.Unit import Irinas
-
+from Mod.OriginalPackage.Skill import LuckyCoin, GreatPatrioticWar, LightningStrike
+from Mod.OriginalPackage.Unit import Irinas, Leviathan, DemonJay, C_999
 
 seed = int(time.time())
 random.seed(seed)
@@ -38,10 +37,22 @@ print(    GetRandUnrepeatCard({
 
 os.system("pause")
 '''
-game.Players[0].Pump(Irinas().Concre())
-game.Players[0].Pump(LuckyCoin().Concre())
-game.Players[1].Pump(Irinas().Concre())
-game.Players[1].Pump(LuckyCoin().Concre())
+
+paidui = GetRandCard({"Type": "UnitCard", }, 40) \
+         + GetRandCard({"Type": "SkillCard", }, 20)
+
+random.shuffle(paidui)
+random.shuffle(paidui)
+random.shuffle(paidui)
+
+for _ in range(10):
+    game.Players[0].Pump(DemonJay().Concre())
+game.Players[1].Pump(GreatPatrioticWar().Concre())
+
+game.Players[1].RawPile = paidui[len(paidui) // 2:]
+
+random.shuffle(game.Players[0].RawPile)
+random.shuffle(game.Players[1].RawPile)
 
 # test↑
 

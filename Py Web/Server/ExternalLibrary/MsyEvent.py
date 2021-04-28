@@ -68,15 +68,16 @@ class EventMonitoring(object):
                     for trig in list(self.Triggers[event["type"]].values()):
                         try:
                             trig.DeathProcessing(event)
-                        except:
-                            pass
+                        except Exception as e:
+                            print("event death error:", repr(e))
                 # 玩家出牌
                 elif (event["type"] == "Pop"):
                     for trig in list(self.Triggers[event["type"]].values()):
                         try:
                             trig.PopProcessing(event)
-                        except:
-                            pass
+                        except Exception as e:
+                            print("event pop error:", repr(e))
+
                 # 待定
                 elif (event["type"] == "?"):
                     pass

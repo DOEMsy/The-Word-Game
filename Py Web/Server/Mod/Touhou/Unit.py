@@ -16,7 +16,7 @@ class HakureiReimu(UnitCard):
             name="博丽灵梦",
             desc="贪财的红白巫女，好像是某个作品系列的主角？\n"
                  "◇追踪符札：出牌时，发射{}个弹幕，每个弹幕可对敌方随机一个单位造成{}点魔法伤害\n"
-                 "◇阴阳玉：砸人的效果出奇，使得自身基础战斗力+{}"
+                 "◇阴阳玉：砸人的效果出奇，打出时使得自身基础战斗力+{}"
                  "".format(self.max_num_attack, self.attack_dmg, self.combat_add),
             combat=5,
             level=3,
@@ -113,8 +113,8 @@ class TataraKogasaFake(UnitCard):
 class KirisameMarisa(UnitCard):
     def __init__(self):
         self.get_card_num = 1
-        self.boom_max_dmg = 2
-        self.boom_min_dmg = 4
+        self.boom_max_dmg = 4
+        self.boom_min_dmg = 2
         super().__init__(
             name="雾雨魔理沙",
             desc="性格恶劣有严重收集癖的魔法使，好像是某个作品系列的主角DA☆ZE\n"
@@ -132,7 +132,6 @@ class KirisameMarisa(UnitCard):
     def _debut(self, ins) -> bool:
         # 魔法道具,可以选择不使用
         if (ins[1] != NoSpell):
-            # bug? ↓
             target = self.ThisGame.UIDCardDict[ins[1]]
             target.GetDamage(randint(self.boom_min_dmg, self.boom_max_dmg), {"魔法"})
         # 暂时借走

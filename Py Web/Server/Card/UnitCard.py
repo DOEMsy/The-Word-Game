@@ -18,6 +18,8 @@ class UnitCard(Card):
         self.CantoLines = canto  # 可以打入的行
         self.UnleashOp = unleashOp
         self.SelDedication = selDedication
+        self.Effect = [] # 固有效果
+        self.ShieldValue = 0 # 护盾版本 0.0.1 测试
 
     # 出牌
     # ins =  [card_type,to...]
@@ -50,37 +52,68 @@ class UnitCard(Card):
     def Combat(self) -> int:
         return self._combat()
 
+    # 战斗力 自身
     def _combat(self) -> int:
         if (self.SelfCombat == 0):  return 0  # 濒死
         res = self.SelfCombat
-        for uid, se in self.Status.items():
-            res += se.CombatAmend()
-        return max(res, 0)  # 最低不能少于0
+        for se in self.Status.values():
+            res += self._combat_status(se)
+        if (0 <= self.Location < 3):
+            for ef in self.OwnPlayer.lineExisEffect[self.Location].values():
+                res += self._combat_exis_effect(ef)
+        return max(0,res)
+
+    # 战斗力 响应效果值
+    def _combat_status(self,status)->int:
+        return status.CombatAmend()
+
+    # 战斗力 响应其他人存在时效果值
+    def _combat_exis_effect(self,effect)->int:
+        return effect.ExiEffect(self)
 
     # 出牌效果 注册函数
     def Debut(self, ins) -> bool:
         try:
-            # 死亡监视器
-            if (self.Monitor_Death):
-                self.ThisGame.eventMonitoring.BundledTrigger("Death", self)
-            if (self.Monitor_Pop):
-                self.ThisGame.eventMonitoring.BundledTrigger("Pop", self)
-            # 使用技能？
-            # 注册触发器？如果有需要的话
-
-            # 0.2.1 注"销"触发器需要看逻辑时机会，
-            # 例如一个卡牌死亡后自爆，则触发器注销应在触发DeathProcessing中，执行完自爆后再注销
-            # 如果注销在 CanDead 函数中，那么将可能无法完成自爆
-            # 再例如一个监视别人死亡的卡牌，则触发器注销可以放在 Dead 函数中，也可以放在 DeathProcessing 中
-            # 但是如果是一张监视出牌的卡片，注册的是其他触发器，DeathProcessing 不会被执行， 那么需要注销就不能放在 DeathProcessing 中
-            # 同时 绝大部分正常的卡，场替的时候都要注销触发器
-
             return self._debut(ins)
         except Exception as e:
             print("card debut error:", repr(e))
 
     # 出牌效果 实现函数
     def _debut(self, ins) -> bool:
+        return True
+
+    # 自施加效果启动，在部署到战场上时被调用
+    def SelftoLineOn(self):
+
+        self._selftoLineOn()
+        # 施加效果
+        for efc in self.Effect:
+            self.AddStatus(efc)
+
+        # 注册监视器
+        # 死亡监视器
+        if (self.Monitor_Death):
+            self.ThisGame.eventMonitoring.BundledTrigger("Death", self)
+        if (self.Monitor_Pop):
+            self.ThisGame.eventMonitoring.BundledTrigger("Pop", self)
+        # 使用技能？
+        # 注册触发器？如果有需要的话
+
+        # 0.2.1 注"销"触发器需要看逻辑时机会，
+        # 例如一个卡牌死亡后自爆，则触发器注销应在触发DeathProcessing中，执行完自爆后再注销
+        # 如果注销在 CanDead 函数中，那么将可能无法完成自爆
+        # 再例如一个监视别人死亡的卡牌，则触发器注销可以放在 Dead 函数中，也可以放在 DeathProcessing 中
+        # 但是如果是一张监视出牌的卡片，注册的是其他触发器，DeathProcessing 不会被执行， 那么需要注销就不能放在 DeathProcessing 中
+        # 同时 绝大部分正常的卡，场替的时候都要注销触发器
+
+        # 注册存在时效果
+        if(len(self.ExiEffectOn)>0):
+            self.ThisGame.RegisterExisEffect(self)
+
+        return True
+
+    # 返回值一定是 true
+    def _selftoLineOn(self):
         return True
 
     # 单位在场效果，打入战区，玩家回合结束结算
@@ -106,6 +139,10 @@ class UnitCard(Card):
             if (self.Monitor_Pop):
                 self.ThisGame.eventMonitoring.UnBundledTrigger("Pop", self)
 
+            # 注销存在时效果
+            if (len(self.ExiEffectOn) > 0):
+                self.ThisGame.UnRegisterExisEffect(self)
+
             return True
         return False
 
@@ -117,6 +154,15 @@ class UnitCard(Card):
     # 返回 0 没有受到伤害，返回 1 受到伤害，返回 2 受到伤害并死亡
     def GetDamage(self, num, effectLabel):
         attack_res = 0
+
+        # 护盾抗伤害
+        if(self.ShieldValue>=num):
+            self.ShieldValue -= num
+            num = 0
+        else:
+            num -= self.ShieldValue
+            self.ShieldValue = 0
+
         cureDmg = self._getDamage(num, effectLabel)
         if (cureDmg > 0):
             attack_res += 1
@@ -138,7 +184,7 @@ class UnitCard(Card):
 
     # 增加基础战斗力
     # 返回 0 表示效果失败，1 表示效果成功
-    def AddSelfCombat(self, num, effectLabel=None):
+    def AddSelfCombat(self, num, effectLabel):
         num = self._addSelfCombat(num, effectLabel)
         res = 0
         if (num > 0):
@@ -164,6 +210,10 @@ class UnitCard(Card):
             # 死亡只能用来注销非死亡触发器
             if (self.Monitor_Pop):
                 self.ThisGame.eventMonitoring.UnBundledTrigger("Pop", self)
+
+            # 注销存在时效果
+            if (len(self.ExiEffectOn) > 0):
+                self.ThisGame.UnRegisterExisEffect(self)
 
             return True
         else:
@@ -209,6 +259,7 @@ class UnitCard(Card):
         res += "[{},{},{}".format(self.UID, self.Name, self.SelfCombat)
         if (cbt > self.SelfCombat):    res += "(+{})".format(cbt - self.SelfCombat)
         if (cbt < self.SelfCombat):    res += "(-{})".format(self.SelfCombat - cbt)
+        if (self.ShieldValue>0):       res += "[{}]".format(self.ShieldValue)
         res += ",lv{}]".format(self.Level)
         return res
 
@@ -230,12 +281,27 @@ class UnitCard(Card):
         try:
             if (self._remStatus(status)):
                 self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 消除效果 " + status.Name)
-        except:
-            pass
+        except Exception as e:
+            print("card remove status error",self.UID,status.UID,repr(e))
 
     def _remStatus(self, status):
         self.Status.pop(status.UID)
         return True
+
+    # 添加 减少 护盾
+    def AddShield(self,num,label):
+        self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值增加 " + str(num))
+        self._addShield(num,label)
+
+    def _addShield(self,num,label):
+        self.ShieldValue += num
+
+    def DevShield(self,num,label):
+        self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值减少 " + str(num))
+        self._addShield(num,label)
+
+    def _devShield(self,num,label):
+        self.ShieldValue = max(0,self.ShieldValue - num)
 
     # 转换dict
     def dict(self) -> dict:

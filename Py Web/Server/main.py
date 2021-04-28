@@ -38,16 +38,30 @@ os.system("pause")
 paidui = GetRandCard({"Type": "UnitCard", }, 40) \
          + GetRandCard({"Type": "SkillCard", }, 20)
 
-random.shuffle(paidui)
-# for cd in paidui:
-#     print(cd.Name)
+paidui.sort(key=lambda a:a.Level)
 
-game.Players[0].RawPile = paidui[0:len(paidui) // 2]
+#for cd in paidui:
+#     print(cd.Level)
 
-game.Players[1].RawPile = paidui[len(paidui) // 2:]
 
-random.shuffle(game.Players[0].RawPile)
-random.shuffle(game.Players[1].RawPile)
+NO = randint(0,1)
+for card in paidui:
+    game.Players[NO].RawPile.append(card)
+    NO = (NO+1)%2
+
+# 没必要重排序，目前底层抽牌是随机的，待定
+#game.Players[0].RawPile = paidui[0:len(paidui) // 2]
+#game.Players[1].RawPile = paidui[len(paidui) // 2:]
+#random.shuffle(game.Players[0].RawPile)
+#random.shuffle(game.Players[1].RawPile)
+
+# 调试平衡性
+for cd in game.Players[0].RawPile:
+    print(cd.Level,end=" ")
+print()
+for cd in game.Players[1].RawPile:
+    print(cd.Level,end=" ")
+print()
 
 # test↑
 

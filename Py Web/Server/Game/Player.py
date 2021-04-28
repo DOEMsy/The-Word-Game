@@ -15,6 +15,7 @@ class Player(object):
         self.RawPile = []  # list[card...] 抽牌堆
         self.UnitGrave = []  # list[card...] 墓地
         self.Lines = [[] for _ in range(3)]  # list[list[card...]...] 战区
+        self.lineExisEffect = {x:dict() for x in range(3)}  # 战区存在时效果注册表
         self.IsAbstain = False  # bool 放弃？
 
         self.UIDCardDict = dict()  # 根据UID快速获取该玩家战场上的卡牌，由Game完全接管，但是无法用来从战场删除该卡
@@ -136,6 +137,20 @@ class Player(object):
                 card.OnCourt()
         self.ThisGame.gameLock.release()
         return True
+
+    # 注册 战区存在时效果
+    def RegisterLineExisEffect(self,card,li):
+        try:
+            self.lineExisEffect[li][card.UID] = card
+        except Exception as e:
+            print("player register card line exisEffect error.","playerNO:",self.NO,",cardUID:",card.UID,",",repr(e))
+
+    # 注销 战区存在时效果
+    def UnRegisterLineExisEffect(self,card,li):
+        try:
+            self.lineExisEffect[li].pop(card.UID)
+        except Exception as e:
+            print("player unregister card line exisEffect error.","playerNO:",self.NO,",cardUID:",card.UID,",",repr(e))
 
     # 字典化
     def dict(self):

@@ -188,9 +188,16 @@ def ConcretizationCard(*cards):
     else:
         res = []
         for card in cards:
+            p, g = card.OwnPlayer, card.ThisGame
+            card.OwnPlayer = None
+            card.ThisGame = None  # 本局游戏
+
             tmp = deepcopy(card)
             tmp.UID = GetUID()
             tmp.visualization = True
+
+            tmp.OwnPlayer, tmp.ThisGame = card.OwnPlayer, card.ThisGame = p, g
+
             res.append(tmp)
         return res
 

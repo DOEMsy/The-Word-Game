@@ -1,5 +1,5 @@
 from copy import deepcopy
-from random import choice, randint, random, sample
+from random import choice, randint, sample
 
 import numpy as np
 
@@ -83,7 +83,7 @@ class Ghoul(UnitCard):
         UID = event['para'][0]
         if (UID != self.UID):
             # self.SelfCombat += self.skill_carrion_increased_combat
-            self.AddSelfCombat(self.skill_carrion_increased_combat)
+            self.AddSelfCombat(self.skill_carrion_increased_combat,{"特性"})
 
 
 # --------------- 帝国骑士 -----------------
@@ -105,7 +105,7 @@ class ImperialKnight(UnitCard):
         # 冲锋
         if (ins[0] == 1):
             # self.SelfCombat += 1
-            self.AddSelfCombat(1)
+            self.AddSelfCombat(1,{"计略"})
         return True
 
 
@@ -164,7 +164,7 @@ class GiantGhoul(UnitCard):
         UID = event['para'][0]
         if (UID != self.UID):
             # self.SelfCombat += self.skill_carrion_increased_combat
-            self.AddSelfCombat(self.skill_carrion_increased_combat)
+            self.AddSelfCombat(self.skill_carrion_increased_combat,{"特性"})
 
 
 # --------------- 独眼食尸鬼 -----------------
@@ -192,7 +192,7 @@ class OneEyedGhoul(UnitCard):
         UID = event['para'][0]
         if (UID != self.UID):
             # self.SelfCombat += self.skill_carrion_increased_combat
-            self.AddSelfCombat(self.skill_carrion_increased_combat)
+            self.AddSelfCombat(self.skill_carrion_increased_combat,{"特性"})
 
 
 # --------------- 小布丁 -----------------
@@ -222,7 +222,7 @@ class LittlePudding(UnitCard):
         UID = event['para'][0]
         if (UID != self.UID):
             # self.SelfCombat += self.skill_carrion_increased_combat
-            self.AddSelfCombat(self.skill_carrion_increased_combat)
+            self.AddSelfCombat(self.skill_carrion_increased_combat,{"特性"})
 
 
 # --------------- 灵 -----------------
@@ -284,10 +284,9 @@ class BigWolf(UnitCard):
             },
             canto={1},
         )
-        self.effect = Effect.Nocturnal(self.night_combat_add)
+        self.Effect = [Effect.Nocturnal(self.night_combat_add),]
 
     def _debut(self, ins) -> bool:
-        self.AddStatus(self.effect)
         return True
 
 
@@ -419,7 +418,7 @@ class Blueness(UnitCard):
 class K_902(UnitCard):
     def __init__(self):
         self.magic_dmg_off = 0.6
-        self.basis_combat_add = 10
+        self.basis_combat_add = 15
         super().__init__(
             name="K-902",
             desc="罕见的机械族，拥有高度知性和传说装备的巨大人形武器\n"
@@ -504,10 +503,9 @@ class LowerOrderVampire(UnitCard):
             },
             canto={2},
         )
-        self.effect = Effect.Nocturnal(self.night_combat_add)
+        self.Effect = [Effect.Nocturnal(self.night_combat_add),]
 
     def _debut(self, ins) -> bool:
-        self.AddStatus(self.effect)
         return True
 
     def _toNextTurn(self) -> bool:
@@ -567,17 +565,15 @@ class Irinas(UnitCard):
             },
             canto={2},
         )
-        self.effect = Effect.Nocturnal(self.night_combat_add)
+        self.Effect = [Effect.Nocturnal(self.night_combat_add),]
 
     def _debut(self, ins) -> bool:
-        self.AddStatus(self.effect)
-        # bug？无法复现
 
         cards = sample(ConcretizationCard(*(
                 GetRandCard({"Level": 4, "Label": {"魔法"}}, 1) +
                 GetRandCard({"Level": 3, "Label": {"魔法"}}, 2) +
-                GetRandCard({"Level": 2, "Label": {"魔法"}}, 2) +
-                GetRandCard({"Level": 1, "Label": {"魔法"}}, 2)
+                GetRandCard({"Level": 2, "Label": {"魔法"}}, 3) +
+                GetRandCard({"Level": 1, "Label": {"魔法"}}, 4)
         )), randint(1, 4))
 
 
@@ -594,7 +590,7 @@ class Irinas(UnitCard):
 class RabbitWart(UnitCard):
     def __init__(self):
         self.give_probability = 1.00
-        self.probability_recession = 0.8
+        self.probability_recession = 0.91
         self.max_fenlie = 3
         self.min_fenlie = 2
         super().__init__(
@@ -633,7 +629,7 @@ class RabbitWart(UnitCard):
             1 - self.give_probability
         ]).ravel())):
             card = ConcretizationCard(RabbitWart())
-            card.give_probability *= self.probability_recession
+            card.give_probability = self.give_probability * self.probability_recession
             card.Desc = "很多只没有像无毛兔子的小动物的肉体混乱的拼接在了一起\n" \
                         "◇恶魔：这家伙是个恶魔，不属于现世\n" \
                         "◇群居：出牌时有{}%概率再获得一张相同卡牌\n" \
@@ -684,20 +680,20 @@ class Aetherial(UnitCard):
 
     def _getDamage(self, num, effectLabel):
         self.SelfCombat -= num
-        self.AddSelfCombat(0)
+        self.AddSelfCombat(0,{"魔法"})
         return num
 
-    # 添加效果
+    # 添加效果 护盾 和 光环（存在时效果） 不算做效果
     def _addStatus(self, status):
         status.Apply(self)
-        self.AddSelfCombat(0)
-
+        self.AddSelfCombat(0,{"魔法"})
+        return True
 
 # --------------- 破坏之神 哈威克 -----------------
 
 class Harwick(UnitCard):
     def __init__(self):
-        self.throw_card_num = 3
+        self.throw_card_num = 4
         super().__init__(
             name="哈威克",
             desc="外神，破坏之神，具有将一切粉碎的权能\n"
@@ -728,6 +724,9 @@ class Harwick(UnitCard):
 
     def _addStatus(self, status):
         return False
+
+    def _combat_exis_effect(self,effect):
+        return  0
 
 
 # --------------- 骸骨战士 -----------------
@@ -789,7 +788,7 @@ class MotherofGhosts(UnitCard):
                  "◇幽魂：出场时于同行召唤{}只幽魂\n"
                  "◇束灵：场上每有一个单位死亡，则在己方战场随机召唤一只幽魂"
                  "".format(self.summon_num),
-            combat=7,
+            combat=4,
             level=3,
             label={
                 "幽灵",
@@ -820,10 +819,13 @@ class MotherofGhosts(UnitCard):
 
 class MagicSource(UnitCard):
     def __init__(self):
+        self.shield_get = 7
         super().__init__(
             name="魔力之源",
             desc="蕴含一定魔力的源质点，可以与某些魔法产生联动\n"
-                 "◇联动：每当己方玩家打出一张带有“魔法”或“魔法生物”的卡牌时，就会免费释放一次魔法飞弹",
+                 "◇魔力护盾：自带{}点护盾值\n"
+                 "◇联动：每当己方玩家打出一张带有“魔法”或“魔法生物”的卡牌时，就会免费释放一次魔法飞弹"
+                 "".format(self.shield_get),
             combat=0,
             level=3,
             label={
@@ -831,6 +833,7 @@ class MagicSource(UnitCard):
             },
             canto={2},
         )
+        self.ShieldValue = self.shield_get
         self.summon = Skill.MagicMissile()
         # 注册出牌触发器
         self.Monitor_Pop = True
@@ -893,16 +896,12 @@ class StoneGiant(UnitCard):
             },
             canto={1},
         )
-        self.effect = Effect.ReduceCombatEffectivenessAccordingNumberofOtherUnitsInLine(
+        self.Effect = [Effect.ReduceCombatEffectivenessAccordingNumberofOtherUnitsInLine(
             name="笨重",
             combatAmend=self.cmt_dd,
             desc="所在行内每有一个其他单位则自身战斗力-{}".format(self.cmt_dd),
             label={"特性"}
-        )
-
-    def _debut(self, ins) -> bool:
-        self.AddStatus(self.effect)
-        return True
+        ),]
 
     def _getDamage(self, num, effectLabel):
         if (Has("物理", effectLabel)):
@@ -941,7 +940,7 @@ class Mandrake(UnitCard):
     def __init__(self):
         self.tarline = 1
         self.max_level_att = 3
-        self.dmg = 4
+        self.dmg = 3
         self.baqi = False
         super().__init__(
             name="曼德拉草",
@@ -1036,17 +1035,13 @@ class SkeletonGiant(UnitCard):
             },
             canto={1},
         )
-        self.effect = Effect.SingleBuffingBuffTemplate(
+        self.Effect = [Effect.SingleBuffingBuffTemplate(
             name="异形",
             desc="该单位可以随意操控躯体，以出人意料的方式作战，战斗力+{}"
                  "".format(self.cmt_add),
             combatAmend=self.cmt_add,
             label={"特性"}
-        )
-
-    def _debut(self, ins) -> bool:
-        self.AddStatus(self.effect)
-        return True
+        ),]
 
 
 # --------------- 恶·极 -----------------
@@ -1106,11 +1101,7 @@ class Worm(UnitCard):
             },
             canto={1, 2, 3},
         )
-        self.effect = Effect.NumberDisaster(self.cmt_add)
-
-    def _debut(self, ins) -> bool:
-        self.AddStatus(self.effect)
-        return True
+        self.Effect = [Effect.NumberDisaster(self.cmt_add),]
 
 
 # --------------- 巨型马陆 -----------------
@@ -1133,11 +1124,10 @@ class GiantMalu(UnitCard):
             },
             canto={1, 2},
         )
-        self.effect = Effect.NumberDisaster(self.cmt_add)
+        self.Effect = [Effect.NumberDisaster(self.cmt_add), ]
 
     def _debut(self, ins) -> bool:
         self.ThisGame.UIDCardDict[ins[1]].GetDamage(randint(self.min_dmg, self.max_dmg), {"物理"})
-        self.AddStatus(self.effect)
         return True
 
 
@@ -1151,18 +1141,15 @@ class Ants(UnitCard):
             desc="中型的多足食肉主义者\n"
                  "◇数量之灾：己方每有一个其他的虫属性单位，自身战斗力+{}"
                  "".format(self.cmt_add),
-            combat=4,
+            combat=2,
             level=2,
             label={
                 "虫",
             },
             canto={1},
         )
-        self.effect = Effect.NumberDisaster(self.cmt_add)
+        self.Effect = [Effect.NumberDisaster(self.cmt_add),]
 
-    def _debut(self, ins) -> bool:
-        self.AddStatus(self.effect)
-        return True
 
 
 # --------------- 须龙 -----------------
@@ -1183,11 +1170,8 @@ class WormDragon(UnitCard):
             },
             canto={3},
         )
-        self.effect = Effect.NumberDisaster(self.cmt_add)
+        self.Effect = [Effect.NumberDisaster(self.cmt_add),]
 
-    def _debut(self, ins) -> bool:
-        self.AddStatus(self.effect)
-        return True
 
 
 # --------------- 大马士蝶 -----------------
@@ -1211,9 +1195,11 @@ class DamascusButterfly(UnitCard):
             },
             canto={2},
         )
-        self.effect = Effect.NumberDisaster(self.cmt_add)
-        self.effect2 = Effect.SingleBuffingBuffTemplate(name="拟态", desc="该单位擅长拟态，战斗力+{}".format(self.cmt_add2),
-                                                        combatAmend=self.cmt_add2, label={"计略"})
+        self.Effect = [
+            Effect.NumberDisaster(self.cmt_add),
+            Effect.SingleBuffingBuffTemplate(name="拟态", desc="该单位擅长拟态，战斗力+{}".format(self.cmt_add2),
+                                                        combatAmend=self.cmt_add2, label={"计略"}),
+        ]
         self.effect3 = Effect.SingleDebuffingBuffTemplate(name="夺魂", desc="该单位沾染了鳞粉，战斗力-{}".format(self.cmt_dbf),
                                                           combatAmend=self.cmt_dbf, label={"魔法"})
 
@@ -1228,8 +1214,6 @@ class DamascusButterfly(UnitCard):
             return False
         for card in tarline:
             card.AddStatus(self.effect3)
-        self.AddStatus(self.effect)
-        self.AddStatus(self.effect2)
         return True
 
 
@@ -1237,12 +1221,14 @@ class DamascusButterfly(UnitCard):
 
 class Leviathan(UnitCard):
     def __init__(self):
+        self.cmt_add = 1
         super().__init__(
             name="利维坦",
             desc="宛如一座空中之城的巨大虫族生物，遮云蔽日的天灾\n"
                  "◇数量之灾：己方每有一个其他的虫属性单位，自身战斗力+{}\n"
                  "◇雷云包裹：出牌时，杀死己方场上所有非虫属性单位，己方玩家弃掉所有手牌\n"
-                 "◇天空要塞：在场时，敌方玩家每出一张牌，都会在己方战场随机召唤一只Lv3及以下的虫属性单位",
+                 "◇天空要塞：在场时，敌方玩家每出一张牌，都会在己方战场随机召唤一只Lv3及以下的虫属性单位"
+                 "".format(self.cmt_add),
             combat=30,
             level=4,
             label={
@@ -1251,6 +1237,7 @@ class Leviathan(UnitCard):
             canto={3},
         )
         self.Monitor_Pop = True
+        self.Effect = [Effect.NumberDisaster(self.cmt_add), ]
 
     def _debut(self, ins) -> bool:
         for card in self.OwnPlayer.UIDCardDict.values():
@@ -1262,7 +1249,7 @@ class Leviathan(UnitCard):
     def _popProcessing(self, event):
         NO = event["para"][0]
         if (NO == self.OwnPlayer.OpPlayer.NO):
-            card = ConcretizationCard(random.choice(
+            card = ConcretizationCard(choice(
                 GetRandCard({"Level": 3, "Label": {"虫"}}, 1) +
                 GetRandCard({"Level": 2, "Label": {"虫"}}, 1) +
                 GetRandCard({"Level": 1, "Label": {"虫"}}, 1)
@@ -1271,6 +1258,7 @@ class Leviathan(UnitCard):
         return True
 
 # --------------- C++ -----------------
+
 class CPrimePlus(UnitCard):
     def __init__(self):
         self.get_card_num = 2
@@ -1286,4 +1274,186 @@ class CPrimePlus(UnitCard):
             },
             canto={1,2,3},
         )
-    # 功能未实现
+
+    def _aban(self) -> bool:
+        self.OwnPlayer.GetCards(self.get_card_num)
+        return True
+
+# --------------- 睚眦 -----------------
+
+class DemonJay(UnitCard):
+    def __init__(self):
+        self.exisEffectCmt = 1
+
+        self.tar_min_num = 1
+        self.tar_max_num = 3
+        self.dmg = 4
+        super().__init__(
+            name="睚眦",
+            desc="外形如狼，长有山羊角的巨大猛兽，双眼紧闭不停地渗出鲜红血液，眉间长有邪性的第三只眼。\n"
+                 "◇恶魔：这家伙是个低阶恶魔\n"
+                 "◇威压：存在时，对在场的所有普通生物和高等生物施加精神攻击，减少其{}点战斗力\n"
+                 "◇魔眼·枯萎：对敌方1排的随机{}~{}名敌人造成枯萎效果,直接杀死Lv2及以下单位，对Lv3及以上单位造成{}点魔法伤害"
+                 "".format(self.exisEffectCmt,self.tar_min_num,self.tar_max_num,self.dmg),
+            combat=12,
+            level=4,
+            label={
+                "恶魔",
+            },
+            canto={1},
+        )
+        self.ExiEffectOn = [-3,-2,-1,1,2,3]
+
+    def _debut(self, ins) -> bool:
+        tarline = self.OwnPlayer.OpPlayer.Lines[0]
+        sz = len(tarline)
+        if(sz>0):
+            for card in np.random.choice(
+                tarline,
+                min(sz,randint(self.tar_min_num,self.tar_max_num))
+            ):
+                if(card.Level<=2): card.Dead()
+                else:   card.GetDamage(self.dmg,{"魔法"})
+        return True
+
+    def _exiEffect(self,target):
+        if(Is("普通生物",target) or Is("高等生物",target)):
+            return -self.exisEffectCmt
+        else:
+            return 0
+
+
+# --------------- 巴哈姆特 -----------------
+
+class Bahamut(UnitCard):
+    def __init__(self):
+        self.min_dmg = 0
+        self.max_dmg = 12
+        super().__init__(
+            name="巴哈姆特",
+            desc="传说中，灭世的魔龙，是毁灭的代言者\n"
+                 "◇龙：这家伙是个龙\n"
+                 "◇灭世：打出时，对场上所有单位造成{}~{}点魔法伤害"
+                 "".format(self.min_dmg,self.max_dmg),
+            combat=16,
+            level=4,
+            label={
+                "龙",
+            },
+            canto={1,2},
+        )
+
+    def _debut(self, ins) -> bool:
+        # 灭世
+        for target in self.ThisGame.UIDCardDict.values():
+            target.GetDamage(randint(self.min_dmg, self.max_dmg), {"魔法"})
+
+        return True
+
+# --------------- 地精窃贼 -----------------
+
+class GoblinThief(UnitCard):
+    def __init__(self):
+        self.get_card_num = 1
+        super().__init__(
+            name="地精窃贼",
+            desc="可恶的小偷\n"
+                 "◇偷窃：打出时，从对方牌堆中抽取{}张卡牌"
+                 "".format(self.get_card_num),
+            combat=1,
+            level=2,
+            label={
+                "亚人",
+            },
+            canto={1,2,3},
+        )
+
+    def _debut(self, ins) -> bool:
+        # 偷窃
+        self.OwnPlayer.GetCards_FromOp(self.get_card_num)
+        return True
+
+# --------------- B-971 -----------------
+
+class B_971(UnitCard):
+    def __init__(self):
+        self.shot_dmg = 20
+        super().__init__(
+            name="B-971",
+            desc="罕见的机械族，拥有高度知性的人形远程武器\n"
+                 "◇高度拟人：拥有人类属性\n"
+                 "◇定点破灭狙击: 指定敌方一个目标造成{}点物理伤害\n"
+                 "".format(self.shot_dmg),
+            combat=3,
+            level=4,
+            label={
+                "机械","人类"
+            },
+            canto={3},
+        )
+
+    def _debut(self, ins) -> bool:
+        # 破灭狙击
+        if (ins[1] != NoSpell):
+            target = self.ThisGame.UIDCardDict[ins[1]]
+            target.GetDamage(self.shot_dmg, {"物理"})
+
+        return True
+
+# --------------- C-999 -----------------
+
+class C_999(UnitCard):
+    def __init__(self):
+        self.cmt_up = 4
+        self.shield = 8
+        super().__init__(
+            name="C-999",
+            desc="罕见的机械族，拥有高度知性的人形高性能中央处理器\n"
+                 "◇高度拟人：拥有人类属性\n"
+                 "◇虚粒子护盾：拥有{}点护盾值\n"
+                 "◇主脑:可以接入己方所有的机械单位，提供辅助运算，提升其{}点战斗力"
+                 "".format(self.shield,self.cmt_up),
+            combat=0,
+            level=4,
+            label={
+                "机械","人类"
+            },
+            canto={3},
+        )
+        self.ShieldValue = self.shield
+
+    def _exiEffect(self,target):
+        if(Is("机械",target)):
+            return self.cmt_up
+        else:
+            return 0
+
+# --------------- 武尊 -----------------
+
+class WuZun(UnitCard):
+    def __init__(self):
+        self.debuf_off = 0.7
+        super().__init__(
+            name="武尊",
+            desc="可以同时操纵数十种武器的武术大师，拥有非凡的武技，时常携带大量武器在身旁\n"
+                 "◇四学士：这个家伙是四学士的成员\n"
+                 "◇千人：应对不同的作战情况，随意切换战斗方式，对于减益效果有{}%的免疫"
+                 "".format(self.debuf_off*100),
+            combat=10,
+            level=4,
+            label={
+                "四学士","人类"
+            },
+            canto={3},
+        )
+
+    def _combat_status(self,status) ->int:
+        res = status.CombatAmend()
+        if(res<0): res *= (1-self.debuf_off)
+        return res
+
+    def _combat_exis_effect(self,effect)->int:
+        res = effect.ExiEffect()
+        if (res < 0): res *= (1 - self.debuf_off)
+        return res
+

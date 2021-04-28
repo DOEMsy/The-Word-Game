@@ -162,7 +162,7 @@ class HolyBlessing(SkillCard):
             card.GetDamage(add, self.Label)
         else:
             # card.SelfCombat += add
-            card.AddSelfCombat(add, {"圣吟"})
+            card.AddSelfCombat(add, self.Label)
         return True
 
 
@@ -209,7 +209,7 @@ class LightningStrike(SkillCard):
             name="雷击",
             desc="使用闪电对目标进行打击，造成{}~{}点魔法伤害"
                  "".format(self.min_dmg, self.max_dmg),
-            level=2,
+            level=3,
             label={
                 "魔法"
             }
@@ -463,7 +463,7 @@ class GreatPatrioticWar(SkillCard):
                  "◇计略：这一张计略牌\n"
                  "◇增援：在己方场上随机召唤出与2^(敌方lv4及以上单位数量)的帝国军队——在天灾面前，我们毫不退缩\n"
                  "◇召收：本卡每召唤三个单位，可获得一张战争补给卡牌",
-            level=4,
+            level=5,
             label={
                 "计略"
             }
@@ -471,25 +471,25 @@ class GreatPatrioticWar(SkillCard):
         self.summon = [Unit.ImperialKnight(), Unit.ImperialShotter(), Unit.ImperialShotter()]
         self.give = WarSupplies()
 
-        def _debut(self, ins) -> bool:
-            # 增援（不好使？）
-            num = 0
-            for cd in self.OwnPlayer.OpPlayer.UIDCardDict.values():
-                if (cd.Level >= 4):
-                    num += 1
+    def _debut(self, ins) -> bool:
 
-            num = 2**num
+        num = 0
+        for cd in self.OwnPlayer.OpPlayer.UIDCardDict.values():
+            if (cd.Level >= 4):
+                num += 1
 
-            for _ in range(num):
-                card = ConcretizationCard(choice(self.summon))
-                self.ThisGame.AddCardToLine(self.OwnPlayer, randint(0, 2), card)
+        num = 2**num
 
-            # 召收
-            for _ in range(num // 3):
-                card = ConcretizationCard(self.give)
-                card.Pump(self.OwnPlayer)
+        for _ in range(num):
+            card = ConcretizationCard(choice(self.summon))
+            self.ThisGame.AddCardToLine(self.OwnPlayer, randint(0, 2), card)
 
-            return True
+        # 召收
+        for _ in range(num // 3):
+            card = ConcretizationCard(self.give)
+            card.Pump(self.OwnPlayer)
+
+        return True
 
 
 # --------------- 生锈的斧头 -----------------
@@ -532,11 +532,11 @@ class RustyAxe(SkillCard):
 # 只能通过斧头获得
 class Ragnarok(SkillCard):
     def __init__(self):
-        self.dmg = 18
+        self.dmg = 30
         super().__init__(
             name="诸神黄昏",
             desc="这把锈斧染了鲜血后，焕然一新\n"
-                 "◇开天：把这东西飞出去打中可以对指定行的所有单位造成{}点神术伤害",
+                 "◇开天：把这东西飞出去打中可以对指定行的所有单位造成{}点神术伤害".format(self.dmg),
             level=4,
             label={
                 "神术"
@@ -678,18 +678,14 @@ class MagicBlasting(SkillCard):
     def _debut(self, ins) -> bool:
         ct = 0
         pops = []
-        for uid, effect in self.ThisGame.UIDCardDict[ins[0]].Status.items():
-            try:
-                if (Is("魔法", effect)):
-                    ct += 1
-                    pops.append(uid)
-            except:
-                pass
+        target = self.ThisGame.UIDCardDict[ins[0]]
+        for uid, effect in target.Status.items():
+            if (Is("魔法", effect)):
+                ct += 1
+                pops.append(uid)
+
         for uid in pops:
-            try:
-                self.ThisGame.UIDCardDict.pop(uid)
-            except:
-                pass
+            target.RemStatus(uid)
 
         self.ThisGame.UIDCardDict[ins[0]].GetDamage(
             ct * self.every_effect_dmg,
@@ -708,7 +704,7 @@ class InfiniteSacrifice(SkillCard):
                  "◇无限：当持牌作为弃牌时，将获得一张相同的牌".format(),
             level=5,
             label={
-                "神术"
+                "神术","宝具"
             }
         )
 
@@ -727,7 +723,7 @@ class LuckyCoin(SkillCard):
     def __init__(self):
         self.add_combat = 5
         self.dmg_combat = 2
-        self.ct = 1
+        self.ct = 0
         super().__init__(
             name="幸运币",
             desc="掷出一枚幸运币\n"
@@ -742,10 +738,10 @@ class LuckyCoin(SkillCard):
 
     def _debut(self, ins) -> bool:
         if(choice([True,False])):
-            self.ThisGame.UIDCardDict[ins[0]].AddSelfCombat(self.add_combat)
+            self.ThisGame.UIDCardDict[ins[0]].AddSelfCombat(self.add_combat,self.Label)
         else:
-            self.ThisGame.UIDCardDict[ins[0]].GetDamage(self.dmg_combat,{"魔法"})
-            # bug ↓？
+            self.ThisGame.UIDCardDict[ins[0]].GetDamage(self.dmg_combat,self.Label)
+
             card = ConcretizationCard(self)
             card.ct += 1
             if(card.ct == 3):
@@ -776,8 +772,123 @@ class Healing(SkillCard):
     def _debut(self, ins) -> bool:
         uid = ins[0]
         li = self.ThisGame.UIDCardDict[uid].Location
-        self.ThisGame.UIDCardDict[uid].AddSelfCombat(self.add_combat)
+        self.ThisGame.UIDCardDict[uid].AddSelfCombat(self.add_combat,self.Label)
         for card in self.ThisGame.UIDCardDict[uid].OwnPlayer.Lines[li]:
             if(card.UID != uid):
-                card.AddSelfCombat(self.add_combat_2)
+                card.AddSelfCombat(self.add_combat_2,self.Label)
         return True
+
+# --------------- 虚数粒子飞弹 -----------------
+
+class ImaginaryParticleMissile(SkillCard):
+    def __init__(self):
+        self.target_num = 3
+        self.max_dmg = 4
+        self.min_dmg = 2
+        super().__init__(
+            name="虚数粒子飞弹",
+            desc="发射出{}个虚数粒子对随机敌人进行打击，每个飞弹造成{}~{}点物理伤害"
+                 "".format(self.target_num, self.min_dmg, self.max_dmg),
+            level=2,
+            label={
+                "机械"
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        for _ in range(self.target_num):
+            try:
+                target = choice(list(self.OwnPlayer.OpPlayer.UIDCardDict.values()))
+                target.GetDamage(
+                    randint(self.min_dmg, self.max_dmg),
+                    {"物理"}
+                )
+            except:
+                # 有可能选不到目标
+                pass
+
+        return True
+
+# --------------- 纳米断层保护 -----------------
+
+class NanoTomographyProtection(SkillCard):
+    def __init__(self):
+        self.shield_get = 4
+        self.combat_up = 5
+        self.shield_cup = 2
+        super().__init__(
+            name="纳米断层保护",
+            desc="选定一个目标，用微小的辅助计算机将其包裹起来形成护盾，增加{}点护盾值\n"
+                 "◇辅助运算：目标为机械单位时，施加运算加速效果，增加其{}点战斗力\n"
+                 "◇强化供能：目标为Lv4及以上的机械单位时，护盾值提升{}倍"
+                 "".format(self.shield_get,self.combat_up,self.shield_cup),
+            level=3,
+            label={
+                "机械"
+            }
+        )
+        self.effect = Effect.SingleBuffingBuffTemplate(
+            name="运算加速",
+            desc="这个单位提升了运算能力，战斗力增加{}".format(self.combat_up),
+            combatAmend=self.combat_up,
+            label=self.Label
+        )
+
+    def _debut(self, ins) -> bool:
+        target = self.ThisGame.UIDCardDict[ins[0]]
+        shield = self.shield_get
+        if(Is("机械",target)):
+            target.AddStatus(self.effect)
+            if(target.Level>=4):
+                shield *= self.shield_cup
+        target.AddShield(shield,self.Label)
+        return True
+
+# --------------- 魔法护盾 -----------------
+
+class MagicShield(SkillCard):
+    def __init__(self):
+        self.shield_get = 4
+        super().__init__(
+            name="魔法护盾",
+            desc="选定一个目标，增加{}点护盾值"
+                 "".format(self.shield_get),
+            level=2,
+            label={
+                "魔法"
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        target = self.ThisGame.UIDCardDict[ins[0]]
+        shield = self.shield_get
+        target.AddShield(shield,self.Label)
+        return True
+
+# --------------- 神圣庇护 -----------------
+
+class DivineRefuge(SkillCard):
+    def __init__(self):
+        self.shield_get = 3
+        self.combat_up = 2
+        super().__init__(
+            name="神圣庇护",
+            desc="选定一个目标，增加{}点护盾值和{}点基础战斗力\n"
+                 "◇圣吟：对不死者和恶魔将造成圣吟伤害"
+                 "".format(self.shield_get,self.combat_up),
+            level=2,
+            label={
+                "魔法"
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        target = self.ThisGame.UIDCardDict[ins[0]]
+        if(Is("不死者",target) or Is("恶魔",target)):
+            target.GetDamage(self.shield_get+self.combat_up,self.Label)
+        else:
+            target.AddShield(self.shield_get,self.Label)
+            target.AddSelfCombat(self.combat_up,self.Label)
+        return True
+
+# ---------------  -----------------
