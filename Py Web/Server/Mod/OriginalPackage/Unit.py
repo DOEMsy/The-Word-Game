@@ -693,7 +693,7 @@ class Aetherial(UnitCard):
 
 class Harwick(UnitCard):
     def __init__(self):
-        self.throw_card_num = 4
+        self.throw_card_num = 3
         super().__init__(
             name="哈威克",
             desc="外神，破坏之神，具有将一切粉碎的权能\n"
@@ -819,7 +819,7 @@ class MotherofGhosts(UnitCard):
 
 class MagicSource(UnitCard):
     def __init__(self):
-        self.shield_get = 7
+        self.shield_get = 3
         super().__init__(
             name="魔力之源",
             desc="蕴含一定魔力的源质点，可以与某些魔法产生联动\n"
@@ -1117,7 +1117,7 @@ class GiantMalu(UnitCard):
                  "◇数量之灾：己方每有一个其他的虫属性单位，自身战斗力+{}\n"
                  "◇腐蚀：选定一个单位造成{}~{}点物理伤害"
                  "".format(self.cmt_add, self.min_dmg, self.max_dmg),
-            combat=4,
+            combat=3,
             level=2,
             label={
                 "虫",
@@ -1142,7 +1142,7 @@ class Ants(UnitCard):
                  "◇数量之灾：己方每有一个其他的虫属性单位，自身战斗力+{}"
                  "".format(self.cmt_add),
             combat=2,
-            level=2,
+            level=1,
             label={
                 "虫",
             },
@@ -1382,7 +1382,7 @@ class B_971(UnitCard):
             name="B-971",
             desc="罕见的机械族，拥有高度知性的人形远程武器\n"
                  "◇高度拟人：拥有人类属性\n"
-                 "◇定点破灭狙击: 指定敌方一个目标造成{}点物理伤害\n"
+                 "◇定点破灭狙击: 指定敌方一个目标造成{}点物理伤害"
                  "".format(self.shot_dmg),
             combat=3,
             level=4,
@@ -1457,3 +1457,115 @@ class WuZun(UnitCard):
         if (res < 0): res *= (1 - self.debuf_off)
         return res
 
+
+# --------------- 鹿人 -----------------
+
+class Deeren(UnitCard):
+    def __init__(self):
+        super().__init__(
+            name="鹿人",
+            desc="依靠大森林的自然力量生存的亚人种族，半人半鹿，擅长丛林游击作战\n"
+                 "◇自然：拥有自然属性"
+                 "".format(),
+            combat=4,
+            level=2,
+            label={
+                "亚人","自然"
+            },
+            canto={1,2},
+        )
+
+# --------------- 亚精灵奴隶 -----------------
+
+class Elfslave(UnitCard):
+    def __init__(self):
+        super().__init__(
+            name="亚精灵奴隶",
+            desc="依靠大森林的自然力量生存的亚人种族，与人类相比身材较为苗条，耳朵呈尖状\n"
+                 "◇自然：拥有自然属性\n"
+                 "◇奴隶：可怜的奴隶，手无寸铁"
+                 "".format(),
+            combat=1,
+            level=1,
+            label={
+                "亚人","自然"
+            },
+            canto={1},
+        )
+
+# --------------- 欺诈之神 弗兰德斯 -----------------
+
+class Flanders(UnitCard):
+    def __init__(self):
+        super().__init__(
+            name="弗兰德斯",
+            desc="虚无，不定，混沌，谜团的象征。被记载最少的古神，一度被学者质疑其是否真实存在过。\n"
+                 "◇神明：这单位是一名神\n"
+                 "◇神羽：不会受到任何的伤害和状态效果，但是不免疫死亡\n"
+                 "◇权能·游戏：将双方牌库中的卡牌全部替换成”谜团“——“一切都是假象，质疑一切，欺骗一切”"
+                 "".format(),
+            combat=1,
+            level=5,
+            label={
+                "神明",
+            },
+            canto={3},
+        )
+
+    def _debut(self, ins) -> bool:
+        self.OwnPlayer.RawPile = [Skill.Mystery().Concre() for i in range(len(self.OwnPlayer.RawPile))]
+        self.OwnPlayer.OpPlayer.RawPile = [Skill.Mystery().Concre() for i in range(len(self.OwnPlayer.RawPile))]
+        return True
+
+    def _getDamage(self, num, effectLabel):
+        return False
+
+    def _addStatus(self, status):
+        return False
+
+    def _combat_exis_effect(self,effect):
+        return  0
+
+# --------------- 机械降神 -----------------
+
+class Deusexmachina(UnitCard):
+
+    def __init__(self):
+        self.shield_get = 15
+        self.shield_give = 5
+        super().__init__(
+            name="机械降神",
+            desc="我们要创造属于自己的神明。\n"
+                 "◇人造·神明：这单位是一名神\n"
+                 "◇人造·神羽：拥有{}点护盾\n"
+                 "◇人造·权能·守护：打出时为己方场上所有单位，以及存在时为后续打出的所有单位增加{}点护盾\n"
+                 "◇人造·权能·调度：存在时，为己方场上所有其他单位增加 本卡战斗力25%的战斗力"
+                 "".format(self.shield_get,self.shield_give),
+            combat=8,
+            level=5,
+            label={
+                "神明","机械",
+            },
+            canto={3},
+        )
+        self.ShieldValue = self.shield_get
+        self.Monitor_Pop = True
+        self.ExiEffectOn = [1,2,3]
+
+    def _debut(self, ins) -> bool:
+        for card in self.OwnPlayer.UIDCardDict.values():
+            card.AddShield(self.shield_give,{"机械"})
+        return True
+
+    def _popProcessing(self, event):
+        NO = event["para"][0]
+        card_pop = event["para"][1]
+        if (NO == self.OwnPlayer.NO and card_pop.Type == "UnitCard"):
+            card_pop.AddShield(self.shield_give,{"机械"})
+        return True
+
+    def _exiEffect(self,target):
+        if(target.UID!=self.UID):
+            return self.Combat()//4
+        else:
+            return 0

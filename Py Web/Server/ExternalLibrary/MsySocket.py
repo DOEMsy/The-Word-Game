@@ -8,9 +8,10 @@ from time import sleep
 
 # TCPConn通道类(socket.accept())
 class Connet(object):
-    def __init__(self, para: [], islog = True):
+    def __init__(self, para: [], islog = True, revSize = 1024):
         self.conn = para[0]  # tcp_conn
         self.addr = para[1]  # (host,port)
+        self.revSize = revSize # 接收数据最size
         self.toChan = []  # 发送消息channel
         self.bkChan = []  # 接收消息channel
         self.toChanLock = Lock()  # 发送消息队列线程锁
@@ -76,7 +77,7 @@ class Connet(object):
     # 监听接收一位数据从conn，推入channel
     def rev(self):
         while (True):
-            rev = self.conn.recv(1024).decode("utf-8")
+            rev = self.conn.recv(self.revSize).decode("utf-8")
             self.bkChanLock.acquire()
             self.bkChan.append(json.loads(rev))
             self.bkChanLock.release()

@@ -29,6 +29,13 @@ def toLstr(Cards: []) -> list:
         res.append(card.lstr())
     return res
 
+# 将卡组中的卡全部转换成短字符串
+def toSstr(Cards: []) -> list:
+    res = []
+    for card in Cards:
+        res.append(card.sstr())
+    return res
+
 # 将卡组中的卡打包
 def PackList(Cards: []) -> list:
     res = []
@@ -36,11 +43,14 @@ def PackList(Cards: []) -> list:
         res.append(card.pack())
     return res
 
-def GetAllCardLstrList() ->list:
-    return toLstr(AllCard)
+def GetAllCardSstrList() ->list:
+    return toSstr(sorted(AllCard.values(),key=lambda a:a.Level))
+
+def GetCardWithUID(UID):
+    return AllCard[UID]
 
 # 全部的卡包
-AllCard = []
+AllCard = {}
 
 # 查询全集
 AllSearchCard = dict()
@@ -58,7 +68,7 @@ def RegistrationCard(*Cards):
         # 获取从 GetCardSet 中获取的卡牌或者直接从原卡牌生成的卡牌，必须使用 ConcretizationCard ，防止 UID 冲突
         # print("加载卡牌：",insert_value)
         card = ConcretizationCard(insert_value)
-        AllCard.append(card)
+        AllCard[card.UID] = card
 
         # 预处理类型
         try:

@@ -891,4 +891,80 @@ class DivineRefuge(SkillCard):
             target.AddSelfCombat(self.combat_up,self.Label)
         return True
 
-# ---------------  -----------------
+# --------------- 谜团 只能通过弗兰德斯获取 -----------------
+
+class Mystery(SkillCard):
+    def __init__(self):
+        super().__init__(
+            name="谜团",
+            desc="没有人知道这是什么\n"
+                 "◇神术：这是一张神术牌，具有改变世间常理的力量",
+            level=5,
+            label={
+                "神术"
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+
+        x = randint(1,10)
+        if(x==1): # 全场随机受伤
+            for card in self.ThisGame.UIDCardDict.values():
+                card.GetDamage(randint(0,1)*randint(1,10),self.Label)
+        elif(x==2): # 己方随机受伤
+            for card in self.OwnPlayer.UIDCardDict.values():
+                card.GetDamage(randint(0,1)*randint(1,10),self.Label)
+        elif(x==3): # 敌方随机受伤
+            for card in self.OwnPlayer.OpPlayer.UIDCardDict.values():
+                card.GetDamage(randint(0,1)*randint(1,10),self.Label)
+        elif(x==4): # 全场随机加护盾
+            for card in self.ThisGame.UIDCardDict.values():
+                card.AddShield(randint(0,1)*randint(1,10),self.Label)
+        elif(x==5): # 己方随机加护盾
+            for card in self.OwnPlayer.UIDCardDict.values():
+                card.AddShield(randint(0,1)*randint(1,10),self.Label)
+        elif(x==6): # 敌方随机加护盾
+            for card in self.OwnPlayer.OpPlayer.UIDCardDict.values():
+                card.AddShield(randint(0,1)*randint(1,10),self.Label)
+        elif(x==7): # 随机方抽牌
+            self.ThisGame.Players[randint(0,1)].GetCards(1)
+        elif(x==8): # 随机方弃牌
+            self.ThisGame.Players[randint(0, 1)].ThrowCards_RandForNum(1)
+        elif(x==9): # 随机牌死亡
+            for card in self.ThisGame.UIDCardDict.values():
+                if(randint(0,5)==0):
+                    card.Dead()
+        elif(x==10): # 什么也没有发生
+            pass
+
+        return True
+
+# --------------- 灵魂剥夺 -----------------
+
+class BodyDeprivation(SkillCard):
+    def __init__(self):
+        self.combatAmend = 999999
+        super().__init__(
+            name="灵魂剥夺",
+            desc="将敌人的灵魂直接击碎，使其失去作战能力。\n"
+                 "".format(self.combatAmend),
+            level=4,
+            label={
+                "魔法"
+            }
+        )
+        self.effect = Effect.SingleDebuffingBuffTemplate(
+            name="灵魂剥夺",
+            desc="这个单位的失去了灵魂，没有作战能力",
+            combatAmend=self.combatAmend,
+            label=self.Label
+        )
+
+    def _debut(self, ins) -> bool:
+        try:
+            self.ThisGame.UIDCardDict[ins[0]].AddStatus(self.effect)
+            return True
+        except:
+            return False
+
+

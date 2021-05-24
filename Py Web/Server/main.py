@@ -35,8 +35,15 @@ print(    GetRandUnrepeatCard({
 
 os.system("pause")
 '''
-paidui = GetRandCard({"Type": "UnitCard", }, 40) \
-         + GetRandCard({"Type": "SkillCard", }, 20)
+# 双方随机获取牌
+# paidui = GetRandCard({"Type": "UnitCard", }, 40) \
+#          + GetRandCard({"Type": "SkillCard", }, 20)
+
+paidui  =   GetRandCard({"Level":1},16)\
+        +   GetRandCard({"Level":2},14)\
+        +   GetRandCard({"Level":3},14)\
+        +   GetRandCard({"Level":4},10)\
+        +   GetRandCard({"Level":5},6)\
 
 paidui.sort(key=lambda a:a.Level)
 
@@ -62,6 +69,12 @@ print()
 for cd in game.Players[1].RawPile:
     print(cd.Level,end=" ")
 print()
+
+# 1 8
+# 2 7
+# 3 7
+# 4 5
+# 5 3
 
 # test↑
 

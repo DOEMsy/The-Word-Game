@@ -2,7 +2,7 @@ import _thread
 import os
 import socket
 
-from ExternalLibrary.ExternalLibrary import GetAllCardLstrList
+from ExternalLibrary.ExternalLibrary import GetAllCardSstrList, GetCardWithUID
 from ExternalLibrary.MsySocket import Connet
 
 
@@ -36,6 +36,8 @@ class Console(object):
                     self.ComClient.Send({0:["test is ok"]})
                 elif(ins=="show"):
                     self.show(para)
+                else:
+                    self.ComClient.Send({0:"wrong command!"})
             except Exception as e:
                 self.ComClient.Send({0:repr(e)})
 
@@ -43,4 +45,7 @@ class Console(object):
         if(para[0]=="cardlist"):
             if(para[1]=="all"):
                 # 传输数据过大，去世了 2021.3.3 21:48
-                self.ComClient.Send({0:GetAllCardLstrList()})
+                self.ComClient.Send({0:GetAllCardSstrList()})
+        elif(para[0]=="card"):
+            UID = int(para[1])
+            self.ComClient.Send({0:GetCardWithUID(UID).lstr()})

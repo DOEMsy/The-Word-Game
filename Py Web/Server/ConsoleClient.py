@@ -1,5 +1,6 @@
 import _thread
 import socket
+import sys
 
 from ExternalLibrary.MsySocket import Connet
 
@@ -22,7 +23,7 @@ class ConsoleClient(object):
             except:
                 pass
         print("连接成功")
-        self.ComServer = Connet([self.comServer,(self.Host,self.Port)],False)
+        self.ComServer = Connet([self.comServer,(self.Host,self.Port)],False,65536)
         _thread.start_new_thread(self.printRev, ())
         _thread.start_new_thread(self.inputCmd, ())
 
@@ -30,15 +31,18 @@ class ConsoleClient(object):
     def printRev(self):
         while True:
             oup = self.ComServer.GetRev()['0']
-            if(type(oup)=="str"):
+            if(type(oup)==str):
                 print(oup)
-            elif(type(oup)=="list"):
+            elif(type(oup)==list):
                 for s in oup:
                     print(s)
             else:
                 print(oup)
+            print("Console> ",end='')
+            sys.stdout.flush()
 
     def inputCmd(self):
+        print("Console> ",end='')
         while True:
             cmd = input().split()
             if(len(cmd)>0):
