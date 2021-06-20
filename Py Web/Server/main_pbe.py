@@ -9,7 +9,8 @@ import time
 import random
 
 from Mod.OriginalPackage.Skill import LuckyCoin, GreatPatrioticWar, LightningStrike
-from Mod.OriginalPackage.Unit import Irinas, Leviathan, DemonJay, C_999
+from Mod.OriginalPackage.Unit import Irinas, Leviathan, DemonJay, C_999, HighPriestofAltoMadike, \
+    MoonbearclassAerialBattleship, K_902
 
 seed = int(time.time())
 random.seed(seed)
@@ -47,9 +48,11 @@ random.shuffle(paidui)
 
 for _ in range(10):
     game.Players[0].Pump(DemonJay().Concre())
-game.Players[1].Pump(GreatPatrioticWar().Concre())
+    game.Players[0].Pump(K_902().Concre())
+game.Players[1].Pump(C_999().Concre())
 
-game.Players[1].RawPile = paidui[len(paidui) // 2:]
+game.Players[1].Pump(HighPriestofAltoMadike().Concre())
+#game.Players[1].RawPile = paidui[len(paidui) // 2:]
 
 random.shuffle(game.Players[0].RawPile)
 random.shuffle(game.Players[1].RawPile)

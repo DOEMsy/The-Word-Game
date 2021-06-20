@@ -335,7 +335,7 @@ class GoblinKing(UnitCard):
         randomSummon = [Goblin(), Wolf(), GiantGoblin()]
         for i in range(num):
             card = ConcretizationCard(choice(randomSummon))
-            # 王之战术
+            # 咆哮鼓舞
             card.AddStatus(self.combat_up_effect)
             self.ThisGame.AddCardToLine(self.OwnPlayer, randint(0, 2), card)
 
@@ -371,7 +371,7 @@ class PiterJerLfu(UnitCard):
             desc="◇银血指挥官：帝国前线作战总指挥官\n"
                  "◇补给：打出后抽取{}张牌"
                  "".format(self.get_card_num),
-            combat=8,
+            combat=7,
             level=3,
             label={
                 "人类", "帝国",
@@ -522,29 +522,22 @@ class HighPriestofAltoMadike(UnitCard):
             name="奥拓麦迪克神圣教国大祭司",
             desc="◇神职人员：这单位是奥拓麦迪克神圣教国大祭司\n"
                  "◇圣光加护：该单位对圣吟伤害有{}%免疫\n"
-                 "◇大审判官：出牌后向玩家手牌中塞入{}张异端审判卡牌"
+                 "◇大审判官：本单位可以释放至多{}次异端审判"
                  "".format(self.dmg_off * 100, self.card_num),
-            combat=3,
+            combat=2,
             level=4,
             label={
                 "人类", "神圣教国"
             },
             canto={3},
         )
-        self.summon = Skill.ReligiousTrial()
-
-    def _debut(self, ins) -> bool:
-        for _ in range(self.card_num):
-            card = ConcretizationCard(self.summon)
-            card.Pump(self.OwnPlayer)
-        return True
+        self.ComCard = {Skill.ReligiousTrial():self.card_num}
 
     def _getDamage(self, num, effectLabel):
         if (Has("圣吟", effectLabel)):
             num = int(round(num * (1 - self.dmg_off)))
         self.SelfCombat -= num
         return num
-
 
 # --------------- 伊莉娜丝 -----------------
 
@@ -990,7 +983,7 @@ class Bell(UnitCard):
             name="招财铃铛",
             desc="可以带来好运的铃铛\n"
                  "◇非战斗：该牌基础战斗力恒为0\n"
-                 "◇强运：每当该牌累计受到一定伤害，就可以使得己方抽取{}张牌，当累计发动{}次后该牌失效（判定为死亡）"
+                 "◇强运：每当该牌累计受到5点伤害，就可以使得己方抽取{}张牌，当累计发动{}次后该牌失效（判定为死亡）"
                  "".format(self.get_card_num, self.least_num),
             combat=0,
             level=3,
@@ -1028,7 +1021,7 @@ class SkeletonGiant(UnitCard):
             desc="某种巨大人形魔物的尸骸\n"
                  "◇异形：可以随意操控躯体，以出人意料的方式作战，战斗力+{}"
                  "".format(self.cmt_add),
-            combat=10,
+            combat=9,
             level=3,
             label={
                 "亡骸",
@@ -1055,7 +1048,7 @@ class Evilest(UnitCard):
             desc="由世间万物的恶，孕育而成\n"
                  "◇罪恶：受到圣吟伤害增加{}%\n"
                  "◇集恶：同时拥有恶魔、不死者、腐化属性\n"
-                 "◇终恶：打出时基础战斗力增加双方墓地卡牌数量的数值，若打出时战斗力达到{}点则变成最终之恶，各项属性翻倍"
+                 "◇终恶：打出时基础战斗力增加双方墓地卡牌数量的数值加双方已打出的禁咒卡牌数量的数值，若打出时战斗力达到{}点则变成最终之恶，各项属性翻倍"
                  "".format(self.dmg_up * 100, self.change_cmt_line),
             combat=0,
             level=4,
@@ -1066,7 +1059,8 @@ class Evilest(UnitCard):
         )
 
     def _debut(self, ins) -> bool:
-        self.SelfCombat += len(self.OwnPlayer.UnitGrave) + len(self.OwnPlayer.OpPlayer.UnitGrave)
+        self.SelfCombat += len(self.OwnPlayer.UnitGrave) + len(self.OwnPlayer.OpPlayer.UnitGrave) \
+                           + self.OwnPlayer.ActionAttributeValue["禁咒"] + self.OwnPlayer.OpPlayer.ActionAttributeValue["禁咒"]
         if (self.SelfCombat >= self.change_cmt_line):
             self.Name = "最终之恶"
             self.SelfCombat *= 2
@@ -1179,14 +1173,14 @@ class WormDragon(UnitCard):
 class DamascusButterfly(UnitCard):
     def __init__(self):
         self.cmt_add = 1
-        self.cmt_add2 = 4
-        self.cmt_dbf = 2
+        self.cmt_add2 = 3
+        self.cmt_dbf = 1
         super().__init__(
             name="大马士蝶",
             desc="擅长拟态的巨大鳞翅目锤角亚目动物\n"
                  "◇数量之灾：己方每有一个其他的虫属性单位，自身战斗力+{}\n"
                  "◇拟态：打出时战斗力+{}\n"
-                 "◇夺魂鳞粉：对选定行所有单位施加夺魂效果，战斗力-{}"
+                 "◇夺魂鳞粉：存在时，敌方二排所有单位战斗力-{}"
                  "".format(self.cmt_add, self.cmt_add2, self.cmt_dbf),
             combat=2,
             level=3,
@@ -1200,21 +1194,13 @@ class DamascusButterfly(UnitCard):
             Effect.SingleBuffingBuffTemplate(name="拟态", desc="该单位擅长拟态，战斗力+{}".format(self.cmt_add2),
                                                         combatAmend=self.cmt_add2, label={"计略"}),
         ]
-        self.effect3 = Effect.SingleDebuffingBuffTemplate(name="夺魂", desc="该单位沾染了鳞粉，战斗力-{}".format(self.cmt_dbf),
-                                                          combatAmend=self.cmt_dbf, label={"魔法"})
+        self.ExiEffectOn = [-2]
 
     def _debut(self, ins) -> bool:
-        tarline = None
-        if (3 >= ins[1] > 0):
-            tarline = self.OwnPlayer.Lines[ins[1] - 1]
-        # 打到对面牌区
-        elif (-3 <= ins[1] < 0):
-            tarline = self.OwnPlayer.OpPlayer.Lines[- ins[1] - 1]
-        else:
-            return False
-        for card in tarline:
-            card.AddStatus(self.effect3)
         return True
+
+    def _exiEffect(self,target):
+        return self.cmt_dbf
 
 
 # --------------- 利维坦 -----------------
@@ -1232,7 +1218,7 @@ class Leviathan(UnitCard):
             combat=30,
             level=4,
             label={
-                "虫", "龙"
+                "虫", "龙", "远古生物"
             },
             canto={3},
         )
@@ -1286,8 +1272,8 @@ class DemonJay(UnitCard):
         self.exisEffectCmt = 1
 
         self.tar_min_num = 1
-        self.tar_max_num = 3
-        self.dmg = 4
+        self.tar_max_num = 2
+        self.dmg = 2
         super().__init__(
             name="睚眦",
             desc="外形如狼，长有山羊角的巨大猛兽，双眼紧闭不停地渗出鲜红血液，眉间长有邪性的第三只眼。\n"
@@ -1421,6 +1407,7 @@ class C_999(UnitCard):
             canto={3},
         )
         self.ShieldValue = self.shield
+        self.ExiEffectOn = [1,2,3]
 
     def _exiEffect(self,target):
         if(Is("机械",target)):
@@ -1428,16 +1415,18 @@ class C_999(UnitCard):
         else:
             return 0
 
-# --------------- 武尊 -----------------
+# --------------- 武尊 李碓瑒 -----------------
 
 class WuZun(UnitCard):
     def __init__(self):
         self.debuf_off = 0.7
+        self.cmb_add = 0
         super().__init__(
-            name="武尊",
+            name="武尊 李碓瑒",
             desc="可以同时操纵数十种武器的武术大师，拥有非凡的武技，时常携带大量武器在身旁\n"
                  "◇四学士：这个家伙是四学士的成员\n"
-                 "◇千人：应对不同的作战情况，随意切换战斗方式，对于减益效果有{}%的免疫"
+                 "◇千人：应对不同的作战情况，随意切换战斗方式，对于减益效果有{}%的免疫\n"
+                 "◇不屈：受到的伤害会等价转化为战斗力"
                  "".format(self.debuf_off*100),
             combat=10,
             level=4,
@@ -1446,6 +1435,7 @@ class WuZun(UnitCard):
             },
             canto={3},
         )
+        self.ExiEffectOn = [-3,-2,-1,1,2,3]
 
     def _combat_status(self,status) ->int:
         res = status.CombatAmend()
@@ -1453,9 +1443,21 @@ class WuZun(UnitCard):
         return res
 
     def _combat_exis_effect(self,effect)->int:
-        res = effect.ExiEffect()
+        res = effect.ExiEffect(self)
         if (res < 0): res *= (1 - self.debuf_off)
         return res
+
+    def _getDamage(self, num, effectLabel):
+        # 不屈 存储伤害
+        self.cmb_add += min(num,self.SelfCombat)
+        self.SelfCombat -= num
+        return num
+
+    def _exiEffect(self,target):
+        # 不屈 对自身效果
+        if(target.UID==self.UID):
+            return self.cmb_add
+        return 0
 
 
 # --------------- 鹿人 -----------------
@@ -1538,7 +1540,7 @@ class Deusexmachina(UnitCard):
             desc="我们要创造属于自己的神明。\n"
                  "◇人造·神明：这单位是一名神\n"
                  "◇人造·神羽：拥有{}点护盾\n"
-                 "◇人造·权能·守护：打出时为己方场上所有单位，以及存在时为后续打出的所有单位增加{}点护盾\n"
+                 "◇人造·权能·守护：出场时为己方场上所有单位，以及存在时为后续打出的所有单位增加{}点护盾\n"
                  "◇人造·权能·调度：存在时，为己方场上所有其他单位增加 本卡战斗力25%的战斗力"
                  "".format(self.shield_get,self.shield_give),
             combat=8,
@@ -1546,22 +1548,24 @@ class Deusexmachina(UnitCard):
             label={
                 "神明","机械",
             },
-            canto={3},
+            canto={1,2},
         )
         self.ShieldValue = self.shield_get
         self.Monitor_Pop = True
         self.ExiEffectOn = [1,2,3]
 
-    def _debut(self, ins) -> bool:
+    def _selftoLineOn(self) -> bool:
         for card in self.OwnPlayer.UIDCardDict.values():
-            card.AddShield(self.shield_give,{"机械"})
+            if (card.UID != self.UID):
+                card.AddShield(self.shield_give,{"机械"})
         return True
 
     def _popProcessing(self, event):
         NO = event["para"][0]
         card_pop = event["para"][1]
         if (NO == self.OwnPlayer.NO and card_pop.Type == "UnitCard"):
-            card_pop.AddShield(self.shield_give,{"机械"})
+            if(card_pop.UID!=self.UID):
+                card_pop.AddShield(self.shield_give,{"机械"})
         return True
 
     def _exiEffect(self,target):
@@ -1569,3 +1573,134 @@ class Deusexmachina(UnitCard):
             return self.Combat()//4
         else:
             return 0
+
+# --------------- 死之大贤者 -----------------
+
+class DeadSage(UnitCard):
+    def __init__(self):
+        self.shield_get_per_dead = 3
+        self.card_num = 3
+        super().__init__(
+            name="死之大贤者",
+            desc="死亡的化身，其存在严重扭曲了世间常理。\n"
+                 "◇骸骨操纵：打出时获取双方墓地卡牌数量和/3的护盾值，存在时场上每有一个单位死亡本卡护盾值+{}\n"
+                 "◇来自死亡的力量：本卡增加双方墓地卡牌数量/3的战斗力。\n"
+                 "◇死亡化身：本卡免疫死亡。\n"
+                 "◇厌生之焰：本卡至多可以释放{}次厌生之焰。"
+                 "".format(self.shield_get_per_dead,self.card_num),
+            combat=4,
+            level=4,
+            label={
+                "不死者",
+            },
+            canto={1,2,3},
+        )
+        self.Monitor_Death = True
+        self.Effect = [
+            Effect.IncreaseCombatEffectivenessBasedOnTheNumberofCardsInGraveBothPlayers(
+                name="来自死亡的力量", desc="该单位从死亡中吸收力量，增加了大量战斗力",
+                combatAmend=1/3, label={"特性"}
+            )
+        ]
+        self.ComCard = {Skill.TheFlameofBoredom():self.card_num}
+
+    def _dead(self) -> bool:
+        return False
+
+    def _debut(self, ins) -> bool:
+        self.AddShield((len(self.OwnPlayer.UnitGrave) + len(self.OwnPlayer.OpPlayer.UnitGrave))//3,{"魔法"})
+        return True
+
+    def _deathProcessing(self, event):
+        UID = event['para'][0]
+        if (UID != self.UID):
+            self.AddShield(self.shield_get_per_dead,{"魔法"})
+        return True
+
+# --------------- 混沌恶灵 -----------------
+
+class ChaosEvil(UnitCard):
+    def __init__(self):
+        self.card_num = 1
+        super().__init__(
+            name="混沌恶灵",
+            desc="彼世的生命，拥有吸收同化的力量。\n"
+                 "◇滋养：获取的所有护盾值会以50%的效率转化为基础战斗力\n"
+                 "◇混沌虹吸：本卡可以最多释放一次{}混沌虹吸"
+                 "".format(self.card_num),
+            combat=3,
+            level=3,
+            label={
+                "恶魔",
+            },
+            canto={1,2},
+        )
+        self.ComCard = {Skill.ChaosSiphon():self.card_num}
+
+    def _addShield(self,num,label):
+        self.AddSelfCombat(num//2,{"特性"})
+        return 0
+
+# --------------- 蔽天之穹 -----------------
+
+class TheDomeofSky(UnitCard):
+    def __init__(self):
+        self.shield_add = 1000
+        self.shieldValue = 1000
+        super().__init__(
+            name="蔽天之穹",
+            desc="天空之城的终极领域城防系统\n"
+                 "◇坚不可摧：拥有{}点护盾值\n"
+                 "◇守护·绝对：出场时为己方场上所有其他单位，以及存在时为后续打出的所有单位增加{}点护盾\n"
+                 "◇失效干扰：本卡无视场替，但本卡死亡时，己方所有护盾消失。"
+                 "".format(self.shieldValue,self.shield_add),
+            level=5,
+            combat=10,
+            label={
+                "神术","宝具","机械"
+            },
+            canto={3},
+        )
+        self.ShieldValue = self.shieldValue
+        self.Monitor_Pop = True
+
+    def _selftoLineOn(self) -> bool:
+        for card in self.OwnPlayer.UIDCardDict.values():
+            if(card.UID!=self.UID):
+                card.AddShield(self.shield_add,{"魔法"})
+        return True
+
+    def _popProcessing(self, event):
+        NO = event["para"][0]
+        card_pop = event["para"][1]
+        if (NO == self.OwnPlayer.NO and card_pop.Type == "UnitCard"):
+            if(card_pop.UID!=self.UID):
+                card_pop.AddShield(self.shield_add,{"魔法"})
+        return True
+
+    def _dead(self) -> bool:
+        for card in self.OwnPlayer.UIDCardDict.values():
+            card.AddShield(9e18,{"魔法"})
+        return True
+
+# --------------- 月熊级空中战列舰  -----------------
+
+class MoonbearclassAerialBattleship(UnitCard):
+    def __init__(self):
+        self.shieldValue = 4
+        self.skill_ct = 3
+        super().__init__(
+            name="月熊级空中战列舰",
+            desc="里约公国的大型应灾空中战列舰\n"
+                 "◇魔导护盾：拥有{}点护盾值\n"
+                 "◇重型火力：本卡最多有{}次释放开火的机会"
+                 "".format(self.shieldValue,self.skill_ct),
+            level=4,
+            combat=14,
+            label={
+                "机械","里约公国"
+            },
+            canto={3},
+        )
+        self.ShieldValue = self.shieldValue
+        self.ComCard = {Skill.OpenFire():self.skill_ct}

@@ -2,6 +2,7 @@ from copy import deepcopy
 from random import randint, sample
 
 from ExternalLibrary.ExternalLibrary import toDict
+from Game.Label import Is
 
 
 class Player(object):
@@ -25,6 +26,8 @@ class Player(object):
         self.Health = 2  # int 玩家生命值
         self.TolCombat = 0  # int 玩家总战力
 
+        self.ActionAttributeValue = {"禁咒":0}
+
     # 出牌
     def PopCard(self, ins) -> bool:
         try:
@@ -36,6 +39,11 @@ class Player(object):
                 self.ThisGame.PlayCardQueue.append(card)
                 # 发送出牌消息
                 self.ThisGame.Print_Message("! " + self.Name + " 打出卡牌:\n" + card.lstr())
+
+                # 玩家累计属性
+                if(Is("禁咒",card)): self.ActionAttributeValue["禁咒"]+=1
+
+
                 # 卡牌在操作过程中有可能改变卡牌顺序，要使用UID删除
                 # del self.HandCards[card_i]
                 for i in range(len(self.HandCards)):
@@ -110,6 +118,12 @@ class Player(object):
                 self.HandCards.pop(card_i)
                 return True
         return False
+
+    def ThrowCards_withUIDList(self, UIDList) -> bool:
+        for UID in UIDList:
+            self.ThrowCards_withUID(UID)
+        # 一定返回True
+        return True
 
     def ThrowCards_ALL(self) -> bool:
         self.ThrowCards_withIlist(range(len(self.HandCards)))

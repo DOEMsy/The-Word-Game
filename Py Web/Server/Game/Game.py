@@ -111,9 +111,9 @@ class Game(object):
         for player in self.Players:
             if (player.TolCombat == minCombat):
                 player.Health -= 1
-                player.GetCards(3)  # 失败者获取3张牌
+                player.GetCards(4)  # 失败者获取3张牌
             else:
-                player.GetCards(3)  # 胜利者获取3张牌
+                player.GetCards(4)  # 胜利者获取3张牌
 
         self.InningsReplacement()
 
@@ -249,7 +249,7 @@ class Game(object):
         # 要求必须是有主卡牌 否者报错
         try:
             tarlines = card.ExiEffectOn
-            selfPlayer = self.Players[card.OwnNO - 1]
+            selfPlayer =  card.OwnPlayer #self.Players[card.OwnNO]
             for li in tarlines:
                 if (0 < li <= 3):
                     selfPlayer.RegisterLineExisEffect(card, li - 1)
@@ -265,7 +265,7 @@ class Game(object):
         # 要求必须是有主卡牌 否者报错
         try:
             tarlines = card.ExiEffectOn
-            selfPlayer = self.Players[card.OwnNO - 1]
+            selfPlayer =  card.OwnPlayer #self.Players[card.OwnNO]
             for li in tarlines:
                 if (0 < li <= 3):
                     selfPlayer.UnRegisterLineExisEffect(card, li - 1)
@@ -295,17 +295,21 @@ class Game(object):
             for card in opPlayer.Lines[i]:
                 oup += "{},".format(card.sstr())
             oup += "\n"
-        oup += "-----------NA:{} CO:{}, HE:{} GV:{} CP:{} ----------\n".format(opPlayer.Name, opPlayer.TolCombat,
-                                                                               opPlayer.Health, opPlayer.IsAbstain,
-                                                                               len(opPlayer.HandCards))
+        oup += "-----------NA:{} CO:{}, HE:{} GV:{} CP:{} UG:{} ----------\n".format(opPlayer.Name, opPlayer.TolCombat,
+                                                                                     opPlayer.Health,
+                                                                                     opPlayer.IsAbstain,
+                                                                                     len(opPlayer.HandCards),
+                                                                                     len(opPlayer.UnitGrave))
         oup += "{}\n".format("Day" if (self.DayOrNight) else "Night")
         oup += "Gl: "
         for gl in self.GlobalCard:
             oup += "{},".format(gl.sstr())
         oup += '\n'
-        oup += "-----------NA:{} CO:{}, HE:{} GV:{} CP:{} ----------\n".format(player.Name, player.TolCombat,
-                                                                               player.Health,
-                                                                               player.IsAbstain, len(player.HandCards))
+        oup += "-----------NA:{} CO:{}, HE:{} GV:{} CP:{} UG:{} ----------\n".format(player.Name, player.TolCombat,
+                                                                                     player.Health,
+                                                                                     player.IsAbstain,
+                                                                                     len(player.HandCards),
+                                                                                     len(player.UnitGrave))
         for i in range(3):
             oup += "{}: ".format(i + 1)
             for card in player.Lines[i]:

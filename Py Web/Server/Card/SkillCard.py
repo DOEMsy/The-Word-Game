@@ -11,6 +11,10 @@ class SkillCard(Card):
         self.UnleashOp = unleashOp
         self.SelDedication = selDedication
 
+        self.ComUnit = "" # 指令绑定的单位，无则由玩家释放
+        self.ComUnitUID = None # 指令绑定的单位，无则由玩家释放
+
+
     # 出牌
     def Play(self, player, ins) -> bool:
         return self._play(player, ins)
@@ -91,7 +95,7 @@ class SkillCard(Card):
 
     # 转换长字串，待完善
     def lstr(self) -> str:
-        return "[{},{},{},lv{},\n{}]".format(self.UID, self.Type, self.Name, self.Level, self.Desc)
+        return "[{},{},{},lv{},{},{},\n{}]".format(self.UID, self.Type, self.Name, self.Level,self.ComUnit,self.Label, self.Desc)
 
     # 转换短字串，待完善
     def sstr(self) -> str:

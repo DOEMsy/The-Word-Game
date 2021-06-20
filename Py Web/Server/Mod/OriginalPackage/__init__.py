@@ -57,6 +57,10 @@ RegistrationCard(
     *3 * [Unit.GiantGoblin()],
     Unit.Flanders(),
     Unit.Deusexmachina(),
+    Unit.DeadSage(),
+    *3 * [Unit.ChaosEvil()],
+    Unit.TheDomeofSky(),
+    *3 * [Unit.MoonbearclassAerialBattleship()],
 
     *1 * [Skill.Explosion()],
     *2 * [Skill.BodyWeak()],
@@ -86,4 +90,11 @@ RegistrationCard(
     *3 * [Skill.MagicShield()],
     *3 * [Skill.DivineRefuge()],
     *2 * [Skill.BodyDeprivation()],
+    *3 * [Skill.StoneBound()],
+    *3 * [Skill.ShieldBacklash()],
+    *4 * [Skill.Curse()],
+    *2 * [Skill.CurseWaveTorrent()],
+    *2 * [Skill.TheFlameofBoredom()],
+    *2 * [Skill.BlackMistofDead()],
+    *4 * [Skill.GuardianWideArea()],
 )

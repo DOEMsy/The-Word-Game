@@ -21,6 +21,9 @@ class UnitCard(Card):
         self.Effect = [] # 固有效果
         self.ShieldValue = 0 # 护盾版本 0.0.1 测试
 
+        self.ComCard = dict() # 指令卡牌，与本卡生命周期相同，{类型:数量}
+        self._comCardUIDList = []
+
     # 出牌
     # ins =  [card_type,to...]
     # 对于普通单位牌，to 只有一项
@@ -90,6 +93,15 @@ class UnitCard(Card):
         for efc in self.Effect:
             self.AddStatus(efc)
 
+        # 获取指令卡牌
+        for tp,num in self.ComCard.items():
+            for _ in range(num):
+                card = ConcretizationCard(tp)
+                self._comCardUIDList.append(card.UID)
+                card.ComUnit = "∈"+self.Name+'('+str(self.UID)+')'
+                card.ComUnitUID = self.UID
+                card.Pump(self.OwnPlayer)
+
         # 注册监视器
         # 死亡监视器
         if (self.Monitor_Death):
@@ -133,6 +145,10 @@ class UnitCard(Card):
     # 场替
     def ToNextTurn(self) -> bool:
         if (self._toNextTurn()):
+
+            # 吊销指令卡牌
+            self.OwnPlayer.ThrowCards_withUIDList(self._comCardUIDList)
+
             # 场替注销触发器
             if (self.Monitor_Death):
                 self.ThisGame.eventMonitoring.UnBundledTrigger("Death", self)
@@ -152,23 +168,31 @@ class UnitCard(Card):
     # 受到伤害 基础战力
     # 返回值为受到该次攻击是否死亡
     # 返回 0 没有受到伤害，返回 1 受到伤害，返回 2 受到伤害并死亡
-    def GetDamage(self, num, effectLabel):
+    def GetDamage(self, num, effectLabel,canUseShield = True):
         attack_res = 0
 
         # 护盾抗伤害
-        if(self.ShieldValue>=num):
-            self.ShieldValue -= num
-            num = 0
-        else:
-            num -= self.ShieldValue
-            self.ShieldValue = 0
+        shiedDmg = 0;tmp = ""
+        if(canUseShield):
+            if(self.ShieldValue>=num):
+                self.ShieldValue -= num
+                shiedDmg = num
+                num = 0
+            else:
+                num -= self.ShieldValue
+                shiedDmg = self.ShieldValue
+                self.ShieldValue = 0
+            if(shiedDmg>0):
+                tmp += "护盾抵消了{}点伤害".format(shiedDmg)
+                if(self.ShieldValue == 0): tmp += "并被击碎"
+                tmp += "，本体"
 
         cureDmg = self._getDamage(num, effectLabel)
         if (cureDmg > 0):
             attack_res += 1
-            self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 受到伤害 " + str(cureDmg))
+            self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + tmp + " 受到伤害 " + str(cureDmg))
         else:
-            self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 免疫了伤害 ")
+            self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + tmp + " 免疫了伤害 ")
         if (self.SelfCombat < 0):
             if (self.Dead()):
                 attack_res += 1
@@ -203,10 +227,16 @@ class UnitCard(Card):
     def Dead(self) -> bool:
         if (self.Alive and self._dead()):
             self.Alive = False
+
+            # 发送死亡信号
             self.ThisGame.eventMonitoring.Occurrence({
                 "type": "Death",
                 "para": [self.UID, self]
             })
+
+            # 吊销指令卡牌
+            self.OwnPlayer.ThrowCards_withUIDList(self._comCardUIDList)
+
             # 死亡只能用来注销非死亡触发器
             if (self.Monitor_Pop):
                 self.ThisGame.eventMonitoring.UnBundledTrigger("Pop", self)
@@ -248,8 +278,8 @@ class UnitCard(Card):
 
     # 转换长字串
     def lstr(self) -> str:
-        return "[{},{},{},{},{},lv{},\n{}]".format(self.UID, self.Type, self.Name, self.CantoLines, self.Combat(),
-                                                   self.Level, self.Desc)
+        return "[{},{},{},{},{},lv{},{},\n{}]".format(self.UID, self.Type, self.Name, self.CantoLines, self.Combat(),
+                                                   self.Level,self.Label, self.Desc)
 
     # 转换短字串
     def sstr(self) -> str:
@@ -290,18 +320,23 @@ class UnitCard(Card):
 
     # 添加 减少 护盾
     def AddShield(self,num,label):
-        self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值增加 " + str(num))
-        self._addShield(num,label)
+        adv = self._addShield(num,label)
+        self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值增加 " + str(adv))
+        return adv
 
     def _addShield(self,num,label):
         self.ShieldValue += num
+        return num
 
     def DevShield(self,num,label):
-        self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值减少 " + str(num))
-        self._addShield(num,label)
+        sdmg = self._devShield(num,label)
+        self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值减少 " + str(sdmg))
+        return sdmg
 
     def _devShield(self,num,label):
-        self.ShieldValue = max(0,self.ShieldValue - num)
+        sdmg = min(self.ShieldValue,num)
+        self.ShieldValue -= sdmg
+        return sdmg
 
     # 转换dict
     def dict(self) -> dict:

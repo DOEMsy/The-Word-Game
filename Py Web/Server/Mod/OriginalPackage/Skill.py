@@ -63,22 +63,19 @@ class BodyWeak(SkillCard):
         self.effect = Effect.BodyWeakEffect(self.combatAmend)
 
     def _debut(self, ins) -> bool:
-        try:
-            self.ThisGame.UIDCardDict[ins[0]].AddStatus(self.effect)
-            return True
-        except:
-            return False
+        self.ThisGame.UIDCardDict[ins[0]].AddStatus(self.effect)
+        return True
 
 
-# --------------- 禁术：灵魂融合 -----------------
+# --------------- 禁咒：灵魂融合 -----------------
 # pop i tarLine throw_i
 class SoulFusion(SkillCard):
     def __init__(self):
-        self.per_label_to_combat = 1
+        self.per_label_to_combat = 3
         super().__init__(
-            name="禁术：灵魂融合",
+            name="禁咒：灵魂融合",
             desc="将某一行的所有单位融合成一个违背常理的怪物\n"
-                 "◇禁术：这张牌是一张禁术牌，打出时必须指定弃一张手牌\n"
+                 "◇禁咒：这张牌是一张禁咒牌，打出时必须指定弃一张手牌\n"
                  "◇融合：将某一行的单位全部杀死，并融合成一个带有腐化的怪物，怪物将继承所有被杀死单位的基础战斗力和属性标签，但不会继承技能。并且在融合时，每有一种属性标签，怪物的基础战斗力+{}"
                  "".format(self.per_label_to_combat),
             level=4,
@@ -88,7 +85,7 @@ class SoulFusion(SkillCard):
         )
 
     def _debut(self, ins) -> bool:
-        if (  # 禁术
+        if (  # 禁咒
                 self.OwnPlayer.HandCards[ins[1]].UID != self.UID and
                 self.OwnPlayer.ThrowCards_withIlist([ins[1]])
         ):
@@ -173,7 +170,7 @@ class NoSunStone(SkillCard):
         super().__init__(
             name="吞日",
             desc="将太阳从世间抹除\n"
-                 "◇禁术：这张牌是一张禁术牌，打出时必须指定弃一张手牌\n"
+                 "◇禁咒：这张牌是一张禁咒牌，打出时必须指定弃一张手牌\n"
                  "▼吞日：全局效果，再不会有白天出现，效果将无视场替",
             level=4,
             label={
@@ -182,7 +179,7 @@ class NoSunStone(SkillCard):
         )
 
     def _debut(self, ins) -> bool:
-        if (  # 禁术
+        if (  # 禁咒
                 self.OwnPlayer.HandCards[ins[0]].UID != self.UID and
                 self.OwnPlayer.ThrowCards_withIlist([ins[0]])
         ):
@@ -274,15 +271,12 @@ class MagicArrow(SkillCard):
         )
 
     def _debut(self, ins) -> bool:
-        try:
-            self.ThisGame.UIDCardDict[ins[0]].GetDamage(
-                self.dmg,
-                self.Label
-            )
-            if (choice([True, False])): self.OwnPlayer.GetCards(1)
-            return True
-        except:
-            return False
+        self.ThisGame.UIDCardDict[ins[0]].GetDamage(
+            self.dmg,
+            self.Label
+        )
+        if (choice([True, False])): self.OwnPlayer.GetCards(1)
+        return True
 
 
 # --------------- 魔法飞弹 -----------------
@@ -325,8 +319,8 @@ class DieImmediately(SkillCard):
         super().__init__(
             name="格列姆的凝视",
             desc="雾行者高层持有的至上宝具，拥有夺取性命的能力，但使用需要付出同等的代价\n"
-                 "◇禁术：这张牌是一张禁术牌，打出时必须指定弃一张手牌\n"
-                 "◇即死：指定一张等级最高为Lv{}的卡牌立即死亡，对于高于等级或免疫死亡的卡牌将无效——枯萎吧，凋零吧，扭断吧，生命的曲线"
+                 "◇禁咒：这张牌是一张禁咒牌，打出时必须指定弃一张手牌\n"
+                 "◇生命剥离：指定一张等级最高为Lv{}的卡牌立即死亡，对于高于等级或免疫死亡的卡牌将无效——枯萎吧，凋零吧，扭断吧，生命的曲线"
                  "".format(self.max_level_can),
             level=4,
             label={
@@ -335,7 +329,7 @@ class DieImmediately(SkillCard):
         )
 
     def _debut(self, ins) -> bool:
-        if (  # 禁术
+        if (  # 禁咒
                 self.OwnPlayer.HandCards[ins[1]].UID != self.UID and
                 self.OwnPlayer.ThrowCards_withIlist([ins[1]])
         ):  # 立即死亡
@@ -361,7 +355,7 @@ class Coin(SkillCard):
                  "".format(self.min_dmg, self.max_dmg, self.dmg_upp),
             level=2,
             label={
-                "物理"
+                "物理","宝具"
             }
         )
 
@@ -371,7 +365,7 @@ class Coin(SkillCard):
         if (Is("机械", target)):    dmg *= self.dmg_upp
         self.ThisGame.UIDCardDict[ins[0]].GetDamage(
             dmg,
-            self.Label
+            {"物理"}
         )
         return True
 
@@ -562,12 +556,12 @@ class Ragnarok(SkillCard):
 
 class FireBoom(SkillCard):
     def __init__(self):
-        self.dmg = 3
+        self.dmg = 5
         super().__init__(
             name="烈焰风暴",
             desc="对目标行所有单位造成{}点魔法伤害"
                  "".format(self.dmg),
-            level=2,
+            level=3,
             label={
                 "魔法"
             }
@@ -667,7 +661,7 @@ class MagicBlasting(SkillCard):
         self.every_effect_dmg = 5
         super().__init__(
             name="魔力爆破",
-            desc="通过连锁反应引爆目标身上的所有的魔法效果，每有一种效果造成{}点伤害"
+            desc="通过连锁反应引爆目标身上的所有的魔法效果，每有一种效果造成{}点伤害，可以直接杀死魔法生物。"
                  "".format(self.every_effect_dmg),
             level=3,
             label={
@@ -679,29 +673,34 @@ class MagicBlasting(SkillCard):
         ct = 0
         pops = []
         target = self.ThisGame.UIDCardDict[ins[0]]
-        for uid, effect in target.Status.items():
-            if (Is("魔法", effect)):
-                ct += 1
-                pops.append(uid)
+        if(Is("魔法生物",target)):
+            target.Dead()
+        else:
+            for uid, effect in target.Status.items():
+                if (Is("魔法", effect)):
+                    ct += 1
+                    pops.append(uid)
 
-        for uid in pops:
-            target.RemStatus(uid)
+            for uid in pops:
+                target.RemStatus(uid)
 
-        self.ThisGame.UIDCardDict[ins[0]].GetDamage(
-            ct * self.every_effect_dmg,
-            self.Label
-        )
+            self.ThisGame.UIDCardDict[ins[0]].GetDamage(
+                ct * self.every_effect_dmg,
+                self.Label
+            )
         return True
 
 # --------------- 无限 -----------------
 
 class InfiniteSacrifice(SkillCard):
     def __init__(self):
+        self.get_card_num = 2
         super().__init__(
             name="无限",
-            desc="仅在神话中存在的宝具，无限\n"
+            desc="仅在神话中存在的宝具，取之不尽用之不竭。\n"
                  "◇无主动：此牌无法被打出\n"
-                 "◇无限：当持牌作为弃牌时，将获得一张相同的牌".format(),
+                 "◇无限：当持牌作为弃牌时，将获得一张相同的牌\n"
+                 "◇恩赐：当此卡发动效果时，可以抽取{}张牌".format(self.get_card_num),
             level=5,
             label={
                 "神术","宝具"
@@ -714,6 +713,7 @@ class InfiniteSacrifice(SkillCard):
     def _aban(self) -> bool:
         card = ConcretizationCard(self)
         card.Pump(self.OwnPlayer)
+        self.OwnPlayer.GetCards(self.get_card_num)
         return True
 
 
@@ -946,7 +946,7 @@ class BodyDeprivation(SkillCard):
         self.combatAmend = 999999
         super().__init__(
             name="灵魂剥夺",
-            desc="将敌人的灵魂直接击碎，使其失去作战能力。\n"
+            desc="◇破魂：将敌人的灵魂直接击碎，使其失去作战能力，对不死者无效。\n"
                  "".format(self.combatAmend),
             level=4,
             label={
@@ -961,10 +961,283 @@ class BodyDeprivation(SkillCard):
         )
 
     def _debut(self, ins) -> bool:
+        target = self.ThisGame.UIDCardDict[ins[0]]
+        if(not Is("不死者",target)):
+            target.AddStatus(self.effect)
+        return True
+
+# --------------- 石缚 -----------------
+
+class StoneBound(SkillCard):
+    def __init__(self):
+        self.cmdcg = 5
+        super().__init__(
+            name="石缚",
+            desc="从地中召唤巨大石阵，将对方包裹，增加其{}点护盾并施加石缚效果。\n"
+                 "◇石缚：该单位被石阵包围了，减少{}点战斗力。"
+                 "".format(self.cmdcg,self.cmdcg),
+            level=3,
+            label={
+                "魔法"
+            }
+        )
+        self.effect = Effect.SingleDebuffingBuffTemplate(
+            name="石缚",
+            desc="该单位被石阵包围了，减少{}点战斗力。",
+            combatAmend=self.cmdcg,
+            label=self.Label
+        )
+
+    def _debut(self, ins) -> bool:
+        self.ThisGame.UIDCardDict[ins[0]].AddStatus(self.effect)
+        self.ThisGame.UIDCardDict[ins[0]].AddShield(self.cmdcg,self.Label)
+        return True
+
+
+# --------------- 反护盾魔导运算 -----------------
+
+class ShieldBacklash(SkillCard):
+    def __init__(self):
+        self.cgtodmg = 0.4
+        super().__init__(
+            name="反护盾魔导运算",
+            desc="将目标的护盾全部击碎，并造将其护盾值{}%转化为魔法伤害作于目标\n"
+                 "◇协震算法：己方每有一名机械单位，该转化率提升{}%。"
+                 "".format(self.cgtodmg*100,self.cgtodmg*100),
+            level=4,
+            label={
+                "魔法","机械"
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        target = self.ThisGame.UIDCardDict[ins[0]]
+        sld = target.DevShield(9e18,{"魔法"})
+        cg = self.cgtodmg
+        for card in self.OwnPlayer.UIDCardDict.values():
+            if(Is("机械",card)):
+                cg += self.cgtodmg
+        target.GetDamage(cg*sld,{"魔法"})
+        return True
+
+# --------------- 诅咒 -----------------
+
+class Curse(SkillCard):
+    def __init__(self):
+        self.dmg_bs = 2
+        self.dmg_up = 2
+
+        self.dmg = 0
         try:
-            self.ThisGame.UIDCardDict[ins[0]].AddStatus(self.effect)
-            return True
+            self.dmg = self.OwnPlayer.ActionAttributeValue["禁咒"] * self.dmg_up
         except:
-            return False
+            pass
 
 
+        super().__init__(
+            name="诅咒",
+            desc="对目标造成{}(+{})点魔法伤害\n"
+                 "◇真实：本卡牌作用的伤害无视护盾。\n"
+                 "◇恶之积累：己方每打出一张禁咒牌，所有本类牌的伤害提升{}"
+                    "".format(self.dmg_bs,self.dmg,self.dmg_up),
+            level=1,
+            label={
+                "魔法",
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        target = self.ThisGame.UIDCardDict[ins[0]]
+        target.GetDamage(self.dmg+self.dmg_bs, {"魔法"},canUseShield=False)
+        return True
+
+    # 动态的长说明串
+    def lstr(self) -> str:
+        self.dmg = 0
+        try: self.dmg = self.OwnPlayer.ActionAttributeValue["禁咒"] * self.dmg_up
+        except: pass
+        self.Desc = "对目标造成{}(+{})点魔法伤害\n"\
+                    "◇真实：本卡牌作用的伤害无视护盾。\n"\
+                    "◇恶之积累：己方每打出一张禁咒牌，所有本类牌的伤害提升{}"\
+                    "".format(self.dmg_bs,self.dmg,self.dmg_up)
+        return "[{},{},{},lv{},{},{},\n{}]".format(self.UID, self.Type, self.Name, self.Level,self.ComUnit,self.Label, self.Desc)
+
+# --------------- 咒波洪流 -----------------
+
+class CurseWaveTorrent(SkillCard):
+    def __init__(self):
+        self.dmg_bs = 1
+        self.dmg_up = 1
+
+        self.dmg = 0
+        try:
+            self.dmg = self.OwnPlayer.ActionAttributeValue["禁咒"] * self.dmg_up
+        except:
+            pass
+
+        super().__init__(
+            name="咒波洪流",
+            desc="对敌方所有单位造成{}(+{})点魔法伤害\n"
+                 "◇真实：本卡牌作用的伤害无视护盾。\n"
+                 "◇恶之积累：己方每打出一张禁咒牌，所有本类牌的伤害提升{}"
+                 "".format(self.dmg_bs, self.dmg, self.dmg_up),
+            level=2,
+            label={
+                "魔法",
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        for target in self.OwnPlayer.OpPlayer.UIDCardDict.values():
+            target.GetDamage(self.dmg+self.dmg_bs, {"魔法"},canUseShield=False)
+        return True
+
+    # 动态的长说明串
+    def lstr(self) -> str:
+        self.dmg = 0
+        try:
+            self.dmg = self.OwnPlayer.ActionAttributeValue["禁咒"] * self.dmg_up
+        except:
+            pass
+        self.Desc = "对敌方所有单位造成{}(+{})点魔法伤害\n" \
+                    "◇真实：本卡牌作用的伤害无视护盾。\n" \
+                    "◇恶之积累：己方每打出一张禁咒牌，所有本类牌的伤害提升{}" \
+                    "".format(self.dmg_bs, self.dmg, self.dmg_up)
+        return "[{},{},{},lv{},{},{},\n{}]".format(self.UID, self.Type, self.Name, self.Level,self.ComUnit,self.Label, self.Desc)
+
+# --------------- 厌生之焰 -----------------
+
+class TheFlameofBoredom(SkillCard):
+    def __init__(self):
+        self.dmg = 2
+        self.dmg_up = 3
+        super().__init__(
+            name="厌生之焰",
+            desc="对目标造成{}点魔法伤害\n"
+                 "◇真实：本卡牌作用的伤害无视护盾。\n"
+                 "◇生命灼烧：对普通生物和高等生物造成{}点额外伤害"
+                 "".format(self.dmg,self.dmg_up),
+            level=3,
+            label={
+                "魔法",
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        target = self.ThisGame.UIDCardDict[ins[0]]
+        if(Is("普通生物",target) or Is("高等生物",target)):
+            target.GetDamage(self.dmg+self.dmg_up, {"魔法"},canUseShield=False)
+        else:
+            target.GetDamage(self.dmg, {"魔法"}, canUseShield=False)
+        return True
+
+# --------------- 亡者黑雾 -----------------
+
+class BlackMistofDead(SkillCard):
+    def __init__(self):
+        self.cmt_cg = 3
+        super().__init__(
+            name="亡者黑雾",
+            desc="散播厌恶生命的邪气，好像拥有自主意识的黑雾。\n"
+                 "◇厌生邪气：全局效果，场上所有不死者战斗力+{},普通生物和高等生物战斗力-{}"
+                 "".format(self.cmt_cg,self.cmt_cg),
+            level=2,
+            label={
+                "魔法"
+            }
+        )
+        self.ExiEffectOn = [-3,-2,-1,1,2,3]
+
+    def _debut(self, ins) -> bool:
+        self.ThisGame.AddCardToGlobal(self)
+        return True
+
+    def _exiEffect(self,target):
+        if(Is("不死者",target)):
+            return self.cmt_cg
+        elif(Is("普通生物",target) or Is("高等生物",target)):
+            return -self.cmt_cg
+
+# --------------- 混沌虹吸 -----------------
+
+# 只能作为单位卡的指令卡获得
+class ChaosSiphon(SkillCard):
+    def __init__(self):
+        self.shield_dev = 3
+        super().__init__(
+            name="混沌虹吸",
+            desc="吸收场上每个单位至多{}点护盾值\n"
+                 "◇滋养：吸收的护盾值以50%转化为施术者的基础战斗力"
+                 "".format(self.shield_dev),
+            level=3,
+            label={
+                "魔法"
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        shddmg = 0
+        for card in self.ThisGame.UIDCardDict.values():
+            shddmg += card.DevShield(self.shield_dev,self.Label)
+        if(self.ComUnitUID!=None):
+            self.ThisGame.UIDCardDict[self.ComUnitUID].AddSelfCombat(shddmg//2,{"特性"})
+        return True
+
+# --------------- 守护·广域 -----------------
+
+class GuardianWideArea(SkillCard):
+    def __init__(self):
+        self.shield_add = 1
+        super().__init__(
+            name="守护·广域",
+            desc="为己方场上每个单位添加{}点护盾值\n"
+                 "◇帝国魔法：对帝国的单位的效果提升100%"
+                 "".format(self.shield_add),
+            level=1,
+            label={
+                "魔法","帝国"
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        for card in self.OwnPlayer.UIDCardDict.values():
+            if(Is("帝国",card)):
+                card.AddShield(self.shield_add*2,self.Label)
+            else:
+                card.AddShield(self.shield_add,self.Label)
+        return True
+
+
+# --------------- 开火 -----------------
+
+# 只能通过战列舰获得
+class OpenFire(SkillCard):
+    def __init__(self):
+        self.target_max_num = 5
+        self.target_min_num = 1
+        self.max_dmg = 4
+        self.min_dmg = 1
+        super().__init__(
+            name="开火",
+            desc="命令战列舰开火，对敌方1~4名敌人造成1~5点随机的 物理伤害。"
+                 "".format(),
+            level=3,
+            label={
+                "计略"
+            }
+        )
+
+    def _debut(self, ins) -> bool:
+        target_num = randint(self.target_min_num,self.target_max_num)
+        for _ in range(target_num):
+            try:
+                target = choice(list(self.OwnPlayer.OpPlayer.UIDCardDict.values()))
+                target.GetDamage(
+                    randint(self.min_dmg, self.max_dmg),
+                    {"物理"}
+                )
+            except:
+                # 有可能选不到目标
+                pass
+
+        return True

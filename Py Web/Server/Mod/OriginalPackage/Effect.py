@@ -129,5 +129,20 @@ class NumberDisaster(StatusEffect):
         for card in self.AcctingOnWho.OwnPlayer.UIDCardDict.values():
             if (Is("虫", card)):
                 ct += 1
-        ct = max(ct-1,0)
+        ct = max(ct - 1, 0)
         return ct * self.basicCombatAmend
+
+
+# --------------- 根据双方墓地卡牌数量增加战斗力 -----------------
+
+class IncreaseCombatEffectivenessBasedOnTheNumberofCardsInGraveBothPlayers(StatusEffect):
+    def __init__(self, combatAmend, name: str, desc: str, label: set):
+        super().__init__(name, desc, label, combatAmend)
+
+    def CombatAmend(self):
+        return int(
+            (
+                    len(self.AcctingOnWho.OwnPlayer.UnitGrave) +
+                    len(self.AcctingOnWho.OwnPlayer.OpPlayer.UnitGrave)
+            ) * self.basicCombatAmend
+        )
