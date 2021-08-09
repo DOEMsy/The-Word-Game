@@ -3,95 +3,108 @@ import os
 import socket
 import re
 import json
+import _thread
+from threading import Lock
+from time import sleep
 
-print("请输入服务器 host")
-host = 0
-port = 0
+from thrift import Thrift
+from thrift.transport import TSocket
+from thrift.transport import TTransport
+from thrift.protocol import TBinaryProtocol
+from idl.game import GameServer
+from idl.game.ttypes import Req, Base
 
-# 长时间连接会断开？
-comSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-scrSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# 要求长时间保持存活
-comSocket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE,True)
-comSocket.ioctl(socket.SIO_KEEPALIVE_VALS,(1,60*1000,30*1000)) #每60秒发送探测包
+class GameClient():
+    def __init__(self):
+        print("请输入服务器 host")
+        self.host = ""
+        self.port = 0
 
-scrSocket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE,True)
-scrSocket.ioctl(socket.SIO_KEEPALIVE_VALS,(1,60*1000,30*1000))
+        while True:
+            # host = input()
+            self.host = "127.0.0.1"
+            if re.match(r'^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$', self.host):
+                self.port = 27018
+                self.tsocket = TSocket.TSocket(self.host, self.port)
+                self.transport = TTransport.TBufferedTransport(self.tsocket)
+                self.protocol = TBinaryProtocol.TBinaryProtocol(self.transport)
+                self.client = GameServer.Client(self.protocol)
+                print("连接至服务器", self.host)
+                # serverSocket.send('ok'.encode('utf-8'))
+                break
+            else:
+                print("请输入正确的服务器 host")
 
-while True:
-    # host = input()
-    host = "192.168.1.116"
-    if re.match(r'^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$', host):
-        port = [27018, 27019]
-        comSocket.connect((host, port[0]))
-        scrSocket.connect((host, port[1]))
-        print("连接至服务器", host)
-        # serverSocket.send('ok'.encode('utf-8'))
-        break
-    else:
-        print("请输入正确的服务器 host:port")
+        self.player_NO = int(input("NO 0 or 1 ？"))# 0 # 1
+        self.prt_que = []
+        self.base_cnt = 0
+        self.transport.open()
 
-game = None
-NO = None
-prtQ = []
-while True:
-    com = json.loads(comSocket.recv(1024).decode("utf-8"))
-    # inp,prt,end
-    ins = com["ins"]
-    para = com["para"]
-    # print(ins,para)
-    if (ins == 'inp'):
-        # 要求输入
-        print(para)
-        inp = []
-        while(len(inp)==0):
-            inp = input().split()
 
-        if(inp[0]=="pop"):
-            try:
-                cardtype = game["Players"][NO]["HandCards"][int(inp[1])]["Type"]
-                cardUID = game["Players"][NO]["HandCards"][int(inp[1])]["UID"]
-                inp.insert(2,cardtype)
-                inp.insert(3,cardUID)
-            except:
-                pass
 
-        comSocket.send(
-            bytes(
-                json.dumps({
-                    "ins":inp[0],
-                    "para":inp[1:]
-                },ensure_ascii=False),
-                encoding="utf-8"
+    def c_s_interactive(self):
+        req = Req(
+            player_NO=self.player_NO,
+            ins="init_player",
+            base=Base(
+                status_code=1,
+                status_message="ok",
+                cnt=self.base_cnt,
             )
         )
-    elif (ins == 'prt'):
-        # 提示消息
-        print(para)
-    elif (ins == 'prtQ'):
-        prtQ.append(para)
-    elif (ins == 'scr'):
-        # 刷新屏幕
-        os.system('cls')
-        tmp = scrSocket.recv(65536).decode("utf-8")
-        # print(tmp)
-        scr = json.loads(tmp)
-        print(scr["scr"])
+        while (True):
+            resp = self.client.what_should_I_do(req)
+            req = self.do_com(resp)
 
-        game = scr["dic"]
-        NO = game["YourNum"]
-        can = len(prtQ)>0
-        if(can):    print("-------------------------------------------")
-        while(len(prtQ)>0):
-            print(prtQ.pop(0)[0]+"\n")
-        if(can):    print("-------------------------------------------")
-        #print();print(scr["dic"])
-        #open("scr.txt","w").write(str(scr["scr"]))
-        #open("dic.txt","w").write(str(scr["dic"]))
+    def do_com(self, resp):
+        self.base_cnt = resp.base.cnt
+        req = Req(
+            player_NO=self.player_NO,
+            ins="done", # 无用指令，同步用
+            base=Base(
+                status_code=1,
+                status_message="ok",
+                cnt=self.base_cnt,
+            )
+        )
 
-    elif (ins == 'end'):
-        print(para)
-        break
+        ins = resp.ins
 
-os.system('pause>nul')
+        if (ins == 'prt'):
+            msg = resp.msg
+            print(msg)
+        elif (ins == 'scr'):
+            os.system('cls')
+            screen = resp.screen
+            print(screen)
+            can = len(self.prt_que) > 0
+            if (can):    print("-------------------------------------------")
+            while (len(self.prt_que) > 0):
+                print(self.prt_que.pop(0) + "\n")
+            if (can):    print("-------------------------------------------")
+        elif (ins == 'prtQ'):
+            msg = resp.msg
+            self.prt_que.append(msg)
+        elif (ins == 'end'):
+            msg = resp.msg
+            print(msg)
+        elif (ins == 'inp'):
+            msg = resp.msg
+            print(msg)
+            inp = []
+            while (len(inp) == 0):
+                inp = input().split()
+            req.ins = inp[0]
+            req.para = inp[1:]
+        elif (ins=='done'):
+            pass
+
+        return req
+
+
+if __name__ == "__main__":
+    game_client = GameClient()
+    # _thread.start_new_thread(game_client.c_s_interactive, ())
+    game_client.c_s_interactive()
+    os.system('pause>nul')
