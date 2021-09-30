@@ -146,9 +146,8 @@ class Player(object):
     # 结算场上技能
     def SettlementOnCourtSkill(self) -> bool:
         self.ThisGame.gameLock.acquire()
-        for line in self.Lines:
-            for card in line:
-                card.OnCourt()
+        for card in self.UIDCardDict.values():
+            card.OnCourt()
         self.ThisGame.gameLock.release()
         return True
 

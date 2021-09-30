@@ -2,6 +2,7 @@ from copy import deepcopy
 
 from Card.Card import Card
 from ExternalLibrary.ExternalLibrary import GetUID
+from Game.Label import Is
 
 
 class StatusEffect(Card):
@@ -29,6 +30,9 @@ class StatusEffect(Card):
         target.Status[UID] = deepcopy(self)
         target.Status[UID].AcctingOnWho = target
         target.Status[UID].ThisGame = target.ThisGame
+
+    def Is(self,Label):
+        return Is(self,Label)
 
     def lstr(self):
         return "[{},{},{},\n{}]".format(self.UID, self.Type, self.Name, self.Desc)

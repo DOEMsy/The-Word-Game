@@ -9,18 +9,19 @@ class EventMonitoring(object):
         self.events = []  # 总线
         self.events_size = 0  # 总线大小
         self.Triggers = {
-            "Death":{},
-            "Pop":{},
+            "Death":{}, # 单位死亡
+            "Pop":{},   # 玩家出牌
+            "GetDmg":{},# 单位受伤
         }  # 触发器
         '''
-            event = [
+            event = 
                 {
                     "type":"",  #事件类型
                     "para":[    #事件参数
 
                     ]
                 }
-            ]
+            
         '''
         self.eventLock = Lock()  # 总线锁
 
@@ -77,6 +78,14 @@ class EventMonitoring(object):
                             trig.PopProcessing(event)
                         except Exception as e:
                             print("event pop error:", repr(e))
+                # 单位受伤
+                elif (event["type"] == "GetDmg"):
+                    for trig in list(self.Triggers[event["type"]].values()):
+                        try:
+                            trig.GetDmgProcessing(event)
+                        except Exception as e:
+                            print("event pop error:", repr(e))
+
 
                 # 待定
                 elif (event["type"] == "?"):

@@ -5,7 +5,8 @@ from ExternalLibrary.ExternalLibrary import toDict, INT, PackList
 
 
 class UnitCard(Card):
-    def __init__(self, name: str, desc: str, combat: int, level: int, label: set, canto: set = {1, 2, 3},unleashOp = [0,False,0,False], selDedication = 0):
+    def __init__(self, name: str, desc: str, combat: int, level: int, label: set, canto: set = {1, 2, 3},
+                 unleashOp=[0, False, 0, False], selDedication=0):
         super().__init__(name, desc)
         self.SelfCombat = combat  # 基础值战斗力
         self.Level = level  # 等级
@@ -14,14 +15,16 @@ class UnitCard(Card):
         self.Status = dict()  # 卡牌状态槽 {作用UID:作用效果}
         self.Monitor_Death = False  # 死亡监视器
         self.Monitor_Pop = False  # 出牌监视器
+        self.Monitor_GetDmg = False  # 单位受伤监视器
+
         self.Alive = True  # 保证死亡函数只能执行一次
         self.CantoLines = canto  # 可以打入的行
         self.UnleashOp = unleashOp
         self.SelDedication = selDedication
-        self.Effect = [] # 固有效果
-        self.ShieldValue = 0 # 护盾版本 0.0.1 测试
+        self.Effect = []  # 固有效果
+        self.ShieldValue = 0  # 护盾版本 0.0.1 测试
 
-        self.ComCard = dict() # 指令卡牌，与本卡生命周期相同，{类型:数量}
+        self.ComCard = dict()  # 指令卡牌，与本卡生命周期相同，{类型:数量}
         self._comCardUIDList = []
 
     # 出牌
@@ -37,16 +40,19 @@ class UnitCard(Card):
             if (card_uid != self.UID): return False
             to = list(map(INT, ins[2:]))
             if (card_type != self.Type):   return False
-            if (to[0] in self.CantoLines and 3 >= to[0] > 0 and self.Debut(to)):
-                self.ThisGame.AddCardToLine(player, to[0] - 1, self)
-                # player.Lines[to[0] - 1].append(self)
-                # self.ThisGame.UIDCardDict[self.UID] = self
-            # 打到对面牌区
-            # elif (-3 <= to[0] < 0 and self.Debut(to)):
-            #    player.OpPlayer.Lines[-1 - to[0]].append(self)
-            else:
-                return False
-            return True
+            if (to[0] in self.CantoLines):
+                if (3 >= to[0] > 0 and self.Debut(to)):
+                    self.ThisGame.AddCardToLine(player, to[0] - 1, self)
+                    return True
+                    # player.Lines[to[0] - 1].append(self)
+                    # self.ThisGame.UIDCardDict[self.UID] = self
+                # 打到对面牌区
+                elif (-3 <= to[0] < 0 and self.Debut(to)):
+                    self.ThisGame.AddCardToLine(player, 1 - to[0], self)
+                    return True
+                    # elif (-3 <= to[0] < 0 and self.Debut(to)):
+                    #    player.OpPlayer.Lines[-1 - to[0]].append(self)
+            return False
         except Exception as e:
             print("card play error:", repr(e))
             return False
@@ -64,15 +70,16 @@ class UnitCard(Card):
         if (0 <= self.Location < 3):
             for ef in self.OwnPlayer.lineExisEffect[self.Location].values():
                 res += self._combat_exis_effect(ef)
-        return max(0,res)
+        return max(0, res)
 
     # 战斗力 响应效果值
-    def _combat_status(self,status)->int:
+    def _combat_status(self, status) -> int:
         return status.CombatAmend()
 
     # 战斗力 响应其他人存在时效果值
-    def _combat_exis_effect(self,effect)->int:
-        return effect.ExiEffect(self)
+    def _combat_exis_effect(self, effect) -> int:
+        res, label = effect.ExiEffect(self)
+        return res
 
     # 出牌效果 注册函数
     def Debut(self, ins) -> bool:
@@ -94,11 +101,11 @@ class UnitCard(Card):
             self.AddStatus(efc)
 
         # 获取指令卡牌
-        for tp,num in self.ComCard.items():
+        for tp, num in self.ComCard.items():
             for _ in range(num):
                 card = ConcretizationCard(tp)
                 self._comCardUIDList.append(card.UID)
-                card.ComUnit = "∈"+self.Name+'('+str(self.UID)+')'
+                card.ComUnitNameUIDStr = "∈" + self.Name + '(' + str(self.UID) + ')'
                 card.ComUnitUID = self.UID
                 card.Pump(self.OwnPlayer)
 
@@ -108,6 +115,9 @@ class UnitCard(Card):
             self.ThisGame.eventMonitoring.BundledTrigger("Death", self)
         if (self.Monitor_Pop):
             self.ThisGame.eventMonitoring.BundledTrigger("Pop", self)
+        if (self.Monitor_GetDmg):
+            self.ThisGame.eventMonitoring.BundledTrigger("GetDmg", self)
+
         # 使用技能？
         # 注册触发器？如果有需要的话
 
@@ -119,7 +129,7 @@ class UnitCard(Card):
         # 同时 绝大部分正常的卡，场替的时候都要注销触发器
 
         # 注册存在时效果
-        if(len(self.ExiEffectOn)>0):
+        if (len(self.ExiEffectOn) > 0):
             self.ThisGame.RegisterExisEffect(self)
 
         return True
@@ -154,6 +164,8 @@ class UnitCard(Card):
                 self.ThisGame.eventMonitoring.UnBundledTrigger("Death", self)
             if (self.Monitor_Pop):
                 self.ThisGame.eventMonitoring.UnBundledTrigger("Pop", self)
+            if (self.Monitor_GetDmg):
+                self.ThisGame.eventMonitoring.UnBundledTrigger("GetDmg", self)
 
             # 注销存在时效果
             if (len(self.ExiEffectOn) > 0):
@@ -167,14 +179,16 @@ class UnitCard(Card):
 
     # 受到伤害 基础战力
     # 返回值为受到该次攻击是否死亡
-    # 返回 0 没有受到伤害，返回 1 受到伤害，返回 2 受到伤害并死亡
-    def GetDamage(self, num, effectLabel,canUseShield = True):
+    # 1，返回 0 没有受到伤害，返回 1 受到伤害，返回 2 受到伤害并死亡
+    # 2，受到伤害的实际数值
+    def GetDamage(self, num, effectLabel, canUseShield=True):
         attack_res = 0
 
         # 护盾抗伤害
-        shiedDmg = 0;tmp = ""
-        if(canUseShield):
-            if(self.ShieldValue>=num):
+        shiedDmg = 0;
+        tmp = ""
+        if (canUseShield):
+            if (self.ShieldValue >= num):
                 self.ShieldValue -= num
                 shiedDmg = num
                 num = 0
@@ -182,15 +196,20 @@ class UnitCard(Card):
                 num -= self.ShieldValue
                 shiedDmg = self.ShieldValue
                 self.ShieldValue = 0
-            if(shiedDmg>0):
+            if (shiedDmg > 0):
                 tmp += "护盾抵消了{}点伤害".format(shiedDmg)
-                if(self.ShieldValue == 0): tmp += "并被击碎"
+                if (self.ShieldValue == 0): tmp += "并被击碎"
                 tmp += "，本体"
 
         cureDmg = self._getDamage(num, effectLabel)
         if (cureDmg > 0):
             attack_res += 1
             self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + tmp + " 受到伤害 " + str(cureDmg))
+            # 注入受伤事件
+            self.ThisGame.eventMonitoring.Occurrence({
+                "type": "GetDmg",
+                "para": [self.UID, attack_res, cureDmg, self]
+            })
         else:
             self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + tmp + " 免疫了伤害 ")
         if (self.SelfCombat < 0):
@@ -199,7 +218,7 @@ class UnitCard(Card):
             # 如果不死，默认战斗力归0，否者将优先遵循Dead()中对战斗力的设定
             elif (self.SelfCombat < 0):
                 self.SelfCombat = 0
-        return attack_res
+        return attack_res, cureDmg
 
     # 返回伤害数值，0 表示免疫了伤害
     def _getDamage(self, num, effectLabel):
@@ -240,6 +259,8 @@ class UnitCard(Card):
             # 死亡只能用来注销非死亡触发器
             if (self.Monitor_Pop):
                 self.ThisGame.eventMonitoring.UnBundledTrigger("Pop", self)
+            if (self.Monitor_GetDmg):
+                self.ThisGame.eventMonitoring.UnBundledTrigger("GetDmg", self)
 
             # 注销存在时效果
             if (len(self.ExiEffectOn) > 0):
@@ -276,10 +297,16 @@ class UnitCard(Card):
     def _popProcessing(self, event):
         return True
 
+    def GetDmgProcessing(self, event):
+        self._getDmgProcessing(event)
+
+    def _getDmgProcessing(self, event):
+        return True
+
     # 转换长字串
     def lstr(self) -> str:
         return "[{},{},{},{},{},lv{},{},\n{}]".format(self.UID, self.Type, self.Name, self.CantoLines, self.Combat(),
-                                                   self.Level,self.Label, self.Desc)
+                                                      self.Level, self.Label, self.Desc)
 
     # 转换短字串
     def sstr(self) -> str:
@@ -289,7 +316,7 @@ class UnitCard(Card):
         res += "[{},{},{}".format(self.UID, self.Name, self.SelfCombat)
         if (cbt > self.SelfCombat):    res += "(+{})".format(cbt - self.SelfCombat)
         if (cbt < self.SelfCombat):    res += "(-{})".format(self.SelfCombat - cbt)
-        if (self.ShieldValue>0):       res += "[{}]".format(self.ShieldValue)
+        if (self.ShieldValue > 0):       res += "[{}]".format(self.ShieldValue)
         res += ",lv{}]".format(self.Level)
         return res
 
@@ -312,29 +339,31 @@ class UnitCard(Card):
             if (self._remStatus(status)):
                 self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 消除效果 " + status.Name)
         except Exception as e:
-            print("card remove status error",self.UID,status.UID,repr(e))
+            print("card remove status error", self.UID, status.UID, repr(e))
 
     def _remStatus(self, status):
         self.Status.pop(status.UID)
         return True
 
     # 添加 减少 护盾
-    def AddShield(self,num,label):
-        adv = self._addShield(num,label)
-        self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值增加 " + str(adv))
+    def AddShield(self, num, label):
+        adv = self._addShield(num, label)
+        if (adv > 0):
+            self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值增加 " + str(adv))
         return adv
 
-    def _addShield(self,num,label):
+    def _addShield(self, num, label):
         self.ShieldValue += num
         return num
 
-    def DevShield(self,num,label):
-        sdmg = self._devShield(num,label)
-        self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值减少 " + str(sdmg))
+    def DevShield(self, num, label):
+        sdmg = self._devShield(num, label)
+        if (sdmg > 0):
+            self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + " 护盾值减少 " + str(sdmg))
         return sdmg
 
-    def _devShield(self,num,label):
-        sdmg = min(self.ShieldValue,num)
+    def _devShield(self, num, label):
+        sdmg = min(self.ShieldValue, num)
         self.ShieldValue -= sdmg
         return sdmg
 
@@ -360,13 +389,13 @@ class UnitCard(Card):
             "Desc": self.Desc,
             "Type": self.Type,
             "Label": list(self.Label),  # json 不允许出现 set
-            "OwnNO":self.OwnNO,
+            "OwnNO": self.OwnNO,
             "Level": self.Level,
             "UID": self.UID,
             "CantoLines": list(self.CantoLines),
-            "SelfCombat":self.SelfCombat,
+            "SelfCombat": self.SelfCombat,
             "Combat": self.Combat(),
-            "Status":PackList(list(self.Status.values())),
+            "Status": PackList(list(self.Status.values())),
             # 释放目标需求，[选目标数，必须选全，选行数目，必须选全]
             "UnleashOp": self.UnleashOp,
             # 需要选择多少张牌进行献祭，（随机献祭不算在内）

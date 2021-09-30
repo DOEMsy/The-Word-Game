@@ -70,6 +70,7 @@ while (game.Players[0].Health > 0 and game.Players[1].Health > 0):
     secPlayer = game.Players[whoSec]
     while ((not fstPlayer.IsAbstain) or (not secPlayer.IsAbstain)):
         game.SettlementRound()
+        game.CalculateCombat()
         if (not fstPlayer.IsAbstain):
             game.PrintScreen(fstPlayer.NO, True)
             game.PrintScreen(secPlayer.NO)

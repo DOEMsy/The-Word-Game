@@ -1,4 +1,5 @@
 from ExternalLibrary.ExternalLibrary import GetUID, Throw_VisualizationError, ConcretizationCard
+from Game.Label import Is
 
 
 class Card(object):
@@ -14,6 +15,7 @@ class Card(object):
         self.Location = -2  # 位置  -2 未出现 , -1 手牌 , 0 1 2 战线 ,3 全局效果
         self.visualization = False  # 具象化，没有具象化的卡牌不允许使用
         self.ExiEffectOn = [] # 存在时效果作用范围 3 2 1 -1 -2 -3
+        self.ExiLabel = {}  # 存在时效果lab
 
     # 抽入手中，返回值必须为True
     def Pump(self, player) -> bool:
@@ -48,7 +50,7 @@ class Card(object):
 
     # 存在时效果
     def ExiEffect(self,target):
-        return self._exiEffect(target)
+        return self._exiEffect(target),self.ExiLabel
 
     # 返回效果作用值
     def _exiEffect(self,target):
@@ -86,6 +88,9 @@ class Card(object):
             "Type": self.Type,
             "UID": self.UID,
         }
+
+    def Is(self,Label):
+        return Is(self,Label)
 
     def pack(self) -> dict:
         return {

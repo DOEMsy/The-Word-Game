@@ -21,7 +21,7 @@ scrSocket.ioctl(socket.SIO_KEEPALIVE_VALS,(1,60*1000,30*1000))
 
 while True:
     # host = input()
-    host = "192.168.1.116"
+    host = "192.168.1.101"
     if re.match(r'^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$', host):
         port = [27018, 27019]
         comSocket.connect((host, port[0]))

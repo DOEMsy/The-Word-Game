@@ -55,7 +55,7 @@ class Game(object):
 
         # P2 Socket
         self.gameLock.acquire()
-        self.Host = "192.168.1.116"  # socket.gethostname()
+        self.Host = "192.168.1.101"  # socket.gethostname()
         self.Port = [27018, 27019]
         # 长时间连接会断开？
         self.comServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -235,12 +235,16 @@ class Game(object):
     def SettlementRound(self) -> bool:
         self.gameLock.acquire()
         self.DayOrNight = self.RealDayOrNight
+
+        # GlobalCard
+
         tmp = []
         for effect in self.GlobalCard:
             effect.Round()
             if (True):
                 tmp.append(effect)
         self.GlobalCard = tmp
+
         self.gameLock.release()
         return True
 
