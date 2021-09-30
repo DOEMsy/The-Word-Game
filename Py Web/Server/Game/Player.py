@@ -34,6 +34,10 @@ class Player(object):
             card_i = int(ins[0])
             if (len(self.HandCards) <= card_i): return False
             card = self.HandCards[card_i]
+
+            # 自动补全 type uid
+            ins = ins[0:1] + [card.Type,card.UID] + ins[1:]
+
             if (card.Play(self, ins[1:])):
                 # 历史出牌队列
                 self.ThisGame.PlayCardQueue.append(card)
