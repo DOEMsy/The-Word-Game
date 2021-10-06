@@ -229,7 +229,7 @@ class TheFinalBattle(SkillCard):
             name="终焉之战",
             desc="从这张牌洗入牌堆开始，命运就已经被扭曲了\n"
                  "◇神术：这是一张神术牌\n"
-                 "◇决战：该牌只能在第三场打出;\n"
+                 "◇决战：该牌只能在至少第三场及之后打出;\n"
                  "◇终焉：对场上所有的单位卡和全局效果卡做场替判定，重新随机日月，双方玩家弃掉所有手牌，随后各自抽取{}张新的手牌;"
                  "".format(self.get_card_num),
             level=5,
@@ -240,7 +240,7 @@ class TheFinalBattle(SkillCard):
 
     def _debut(self, ins) -> bool:
         # 决战
-        if (self.ThisGame.NumberOfInnings == 2):
+        if (self.ThisGame.NumberOfInnings >= 2):
             # 终焉
             self.ThisGame.InningsReplacement()
             self.ThisGame.RealDayOrNight = choice([True, False])
@@ -956,7 +956,7 @@ class BodyDeprivation(SkillCard):
         self.combatAmend = 999999
         super().__init__(
             name="灵魂剥夺",
-            desc="◇破魂：将敌人的灵魂直接击碎，使其失去作战能力，对不死者无效。\n"
+            desc="◇破魂：将敌人的灵魂直接击碎，使其失去作战能力，对不死者无效。"
                  "".format(self.combatAmend),
             level=4,
             label={
@@ -1173,6 +1173,8 @@ class BlackMistofDead(SkillCard):
             return self.cmt_cg
         elif (Is("普通生物", target) or Is("高等生物", target)):
             return -self.cmt_cg
+        else:
+            return 0
 
 
 # --------------- 混沌虹吸 -----------------
@@ -1409,9 +1411,9 @@ class GaiaCore(SkillCard):
             name="盖亚晶核",
             desc="大地之母的核心，指定一个单位将获取无穷的力量\n"
                  "◇山盾岳甲：目标获得{}点护甲\n"
-                 "◇盖亚的力量：等级提升至lv4\n"
+                 "◇盖亚的力量：等级提升至lv5\n"
                  "◇生命之α：目标基础战斗力提升{}%"
-                 "".format(self.sld,self.cbt_up),
+                 "".format(self.sld,self.cbt_up*100),
             level=5,
             label={
                 "魔法","自然","宝具"
@@ -1420,10 +1422,10 @@ class GaiaCore(SkillCard):
 
     def _debut(self, ins) -> bool:
         target = self.ThisGame.UIDCardDict[ins[0]]
-        target.AddShield(self.sld, self.Label)
-        target.AddSelfCombat(target.SelfCombat * self.cbt_up,self.Label)
-        target.Name += '(盖亚附体)'
-        target.Level = max(target.Level,4)
+        if target.AddSelfCombat(target.SelfCombat * self.cbt_up, self.Label):
+            target.AddShield(self.sld, self.Label)
+            target.Name += '(盖亚附体)'
+            target.Level = max(target.Level,5)
         return True
 
 # --------------- 生命榨取 -----------------
@@ -1458,4 +1460,3 @@ class LifeSqueeze(SkillCard):
             self.ThisGame.UIDCardDict[self.ComUnitUID].AddSelfCombat(cdmg*self.cg, {"特性"})
 
         return True
-

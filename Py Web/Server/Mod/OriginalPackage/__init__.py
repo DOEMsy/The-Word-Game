@@ -3,9 +3,9 @@ from Mod.OriginalPackage import Skill
 from ExternalLibrary.ExternalLibrary import RegistrationCard
 
 RegistrationCard(
-    *5 * [Unit.Wolf()],
-    *5 * [Unit.ImperialSoldier()],
-    *5 * [Unit.Goblin()],
+    *4 * [Unit.Wolf()],
+    *4 * [Unit.ImperialSoldier()],
+    *4 * [Unit.Goblin()],
     *3 * [Unit.Ghoul()],
     *3 * [Unit.ImperialKnight()],
     *2 * [Unit.Doppler()],

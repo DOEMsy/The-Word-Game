@@ -4,6 +4,11 @@ from Mod.AncientGods import Skill
 
 
 RegistrationCard(
+    Unit.ConquerApocalypse(),
+    Unit.ExtirpateApocalypse(),
+    Unit.FamineApocalypse(),
+    Unit.PlagueApocalypse(),
 
+    Skill.Colorless(),
 )
 

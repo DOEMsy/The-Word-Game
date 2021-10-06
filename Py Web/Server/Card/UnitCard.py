@@ -6,7 +6,7 @@ from ExternalLibrary.ExternalLibrary import toDict, INT, PackList
 
 class UnitCard(Card):
     def __init__(self, name: str, desc: str, combat: int, level: int, label: set, canto: set = {1, 2, 3},
-                 unleashOp=[0, False, 0, False], selDedication=0):
+                 shieldValue = 0,unleashOp=[0, False, 0, False], selDedication=0):
         super().__init__(name, desc)
         self.SelfCombat = combat  # 基础值战斗力
         self.Level = level  # 等级
@@ -22,7 +22,7 @@ class UnitCard(Card):
         self.UnleashOp = unleashOp
         self.SelDedication = selDedication
         self.Effect = []  # 固有效果
-        self.ShieldValue = 0  # 护盾版本 0.0.1 测试
+        self.ShieldValue = shieldValue  # 护盾版本 0.0.1 测试
 
         self.ComCard = dict()  # 指令卡牌，与本卡生命周期相同，{类型:数量}
         self._comCardUIDList = []
@@ -48,7 +48,7 @@ class UnitCard(Card):
                     # self.ThisGame.UIDCardDict[self.UID] = self
                 # 打到对面牌区
                 elif (-3 <= to[0] < 0 and self.Debut(to)):
-                    self.ThisGame.AddCardToLine(player, 1 - to[0], self)
+                    self.ThisGame.AddCardToLine(player.OpPlayer, 1 - to[0], self)
                     return True
                     # elif (-3 <= to[0] < 0 and self.Debut(to)):
                     #    player.OpPlayer.Lines[-1 - to[0]].append(self)

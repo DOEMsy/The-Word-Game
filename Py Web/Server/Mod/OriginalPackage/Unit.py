@@ -1214,7 +1214,7 @@ class DamascusButterfly(UnitCard):
         return True
 
     def _exiEffect(self, target):
-        return self.cmt_dbf
+        return -self.cmt_dbf
 
 
 # --------------- 利维坦 -----------------
@@ -1724,6 +1724,9 @@ class TheDomeofSky(UnitCard):
             card.DevShield(9e18, {"魔法"})
         return True
 
+    def _toNextTurn(self) -> bool:
+        return False
+
 
 # --------------- 月熊级空中战列舰  -----------------
 
@@ -2025,7 +2028,7 @@ class NothingnessVariant(UnitCard):
         super().__init__(
             name="虚无变体",
             desc="来自彼世的无形生命体，可以幻化成任何生物，任何形状\n"
-                 "◇刺激反馈：受到的伤害会全部转化为基础战斗力，当基础战斗力达到{}时，每次受伤只能增加{}点基础战斗力"
+                 "◇刺激反馈：受到的非神术伤害会全部转化为基础战斗力"
                  "".format(self.cmt_line,self.min_add),
             combat=0,
             level=3,
@@ -2036,14 +2039,16 @@ class NothingnessVariant(UnitCard):
         )
 
     def _getDamage(self, num, effectLabel):
-        self.AddSelfCombat(num, effectLabel)
-        return 0
+        if(Has('神术',effectLabel)):
+            self.SelfCombat -= num
+            return num
+        else:
+            self.AddSelfCombat(num, effectLabel)
+            return 0
 
     def _addSelfCombat(self, num, effectLabel):
         # num+self.SelfCombat = 20 -> 20
         # num+self.SelfCombat > 20 -> 20 + 1 (溢出)
-        if(num>0 and num+self.SelfCombat>20):
-            num = max(21 - self.SelfCombat,1)
         self.SelfCombat+=num
         return num
 

@@ -50,7 +50,9 @@ class Card(object):
 
     # 存在时效果
     def ExiEffect(self,target):
-        return self._exiEffect(target),self.ExiLabel
+         res = self._exiEffect(target)
+         if not res: res = 0
+         return res,self.ExiLabel
 
     # 返回效果作用值
     def _exiEffect(self,target):
