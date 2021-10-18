@@ -1,251 +1,336 @@
-## 开发日记
+# DEMO（待定名）
 
-* 2021.1.25
-  * 近期目标
-    * [x] 将玩家1从服务端分离
-    * [x] 改使用 json 传输信息
-    * [x] 制定 json 规则	
-    * [x] 手造消息队列
-    * [x] 协程轮询接收 socket 消息
-* 2021.1.26
-  * 加入 TCP 消息缓冲队列
-  * 重构三层出牌函数
-  * TCP 传输改用 Json 数据包
-* 2021.1.27
-  * 制定 json 传输规则
-  * 近期目标：
-    * [ ] 完善Mod开发手册
-    * [ ] 完善客户端开发手册
-    * [ ] 实现技能卡牌相关功能
-* 2021.1.28
-  * 补充通信规则
-  * 近期目标：
-    * [ ] 实现技能卡牌相关功能
-      * [ ] 完善事件系统（事件驱动模型 ）
-        * [ ] 公共监视器
-        * [ ] 独立监视器
+这是一个类昆特牌的双人对战游戏，支持跨平台互联网联机、自建卡牌mod。
 
+目前只实现了主要游戏逻辑，支持断线重连、事件触发器、卡牌接口。
 
+游戏操作/界面暂时很不友好，技术力有限、无限期鸽置。
 
-## 服务端数据通信规则 *v0.1.0*
+## 快速开始
 
-服务器开放有两个端口 指令通信端口 和 屏幕通信端口
+**运行环境**
 
-> 两个玩家共用一套通信端口，但拥有各自独立的通信Channel
+* python 3.6+
 
-### 指令通信
+**克隆代码库**
 
-频繁传输处理短小的指令，作为客户端和服务器相互通信的主要手段，
-
-由 指令通信端口 `27015` 发送和接受，数据包采用 json ，有特定结构
-
-```json
-{
-	"ins":"",
-	"para":[
-   		"",
-        "",
-        ...
-    ]
-}
+```C++
+git clone https://github.com/SAU-OSSA/The-Word-Game.git
 ```
 
-* `ins` 项为字符串，表示指令串
-* `para` 项为字符串数组，表示指令串尾随的参数们 
+**安装运行库**
 
-
-
-#### inp
-
-出牌信号，由服务器向客户端发送，表示客户端可以出牌，并反馈出牌步骤
-
-发出信号后，服务器将接收处理最近一次的 pop 或者 giveup 信号
-
-```json
-{
-    "ins":"inp",
-	"para":[
-        "轮到你了，请出牌",
-        "0"
-    ]
-}
 ```
-
-* `para[0]` 为服务器自然语言反馈
-* `para[1]` 表示上次出牌是否错误，0 = False，>0 = True
-
-
-
-#### end
-
-游戏结束信号，由服务器向客户端发送，表示游戏结束
-
-```json
-{
-    "ins":"end",
-    "para":[
-        "游戏结束",
-        "0"
-    ]
-}
-```
-
-* `para[0]` 为服务器自然语言反馈
-* `para[1]` 表示胜利方，0 = 玩家1，1 = 玩家2 ，2 = 平局，3 = 错误
-
-
-
-#### scr
-
-屏幕通信信号，由服务器向客户端发送，表示游戏对局屏幕发生改变，需要更新
-
-```json
-{
-    "ins":"scr",
-    "para":[]
-}
-```
-
-在发出信号同时服务器会发送 屏幕通信包
-
-
-
-#### prt
-
-显示通信信号，由服务器向客户端发送，包含一些提示信息
-
-```json
-{
-    "ins":"prt",
-    "para":[
-        "请调整下眉毛位置",
-        ...
-    ]
-}
+pip install thrift
 ```
 
 
 
-#### pop
+## 开始游戏
 
-出牌信号，在客户端接收到 inp 信号后可以发送一次，与 giveup 冲突，由客户端向服务器发送，表示出牌步骤，服务器将处理反馈是否合法
+**启动服务器**
 
-不和法的出牌步骤将无效，并再次向客户端发送一次 inp 信号
+* 默认开启本地服务器，可以在 ``Server.Game.Game.Host`` 中修改
 
-```json
-{
-    "ins":"pop",
-    "para":[
-        "0",
-        "UnitCard",
-        "1",
-        ...
-    ]
-}
+```
+cd 'Py Web'
+python ./Server/main.py
 ```
 
-* `para[0]` 表示被出牌在手牌中的下标
-* `para[1]` 表示被出牌的类型
-* `para[2: ]` 表示出牌步骤，不同类型的卡牌有不同的出牌步骤规则
+**启动客户端**
+
+* 默认连接本地服务器，可以在 `Client.main.GameClient.host` 中修改
+* 连接两个玩家后游戏开始
+
+```
+python ./Client/main.py
+NO 0 or 1 ？ # 选择玩家0 or 1
+```
+
+**客户端断线重连**
+
+* 重新启动客户端
 
 
 
-#### giveup
+## How to play?
 
-弃权信号，在客户端接收到 inp 信号后可以发送一次，与 pop 冲突，由客户端向服务器发送，表示弃权本场对局（一共三场，三局两胜）
+**出牌** 
 
-```json
-{
-    "ins":"giveup",
-    "para":[]
-}
+```
+pop <手牌序号> [目标行] [目标id] [弃牌序号]
+# <必选> [附加]
+```
+
+**放弃出牌**
+
+```
+giveup
 ```
 
 
 
-### 屏幕通信
+## 扩展接口
 
-由  屏幕通信端口 `27016` 发送，*本端口可以接收数据，但不会做任何处理*
+目前高度集成了卡牌接口，可以在数十行内快速实现一些有趣的卡牌逻辑，包括事件触发、出牌效果、光环效果等，甚至不需要考虑卡牌退场时各种技能效果/触发器的回收。
 
-#### 对局包
+下面只介绍一部分基本接口，更多模板参考 `Server.Mod.OriginalPackage`
 
-由服务器发出，较大的数据包，其中包括一整套的对局当前信息和屏幕信息
+#### 怎么写一个单位牌？
 
-服务器在发出 对局包 前会提前发送 scr 信号
+1. 继承基类 `Server.Card.UnitCard`
 
-```json
-{	
-    "scr":"",
-    "dic":{
+2. 基础属性（必写）
+
+```python
+class Wolf(UnitCard):
+    def __init__(self):
+        super().__init__(
+            name="狼",	# 名称
+            desc="森林中常见的野生动物",	# 说明文字
+            combat=2,	# 基础战斗力 >=0
+            level=1,	# 等级 [1,2,3,4,5]
+            label={		# 标签（参考Server.Game.Label,支持自定义）
+                "动物",
+            },
+            canto={1},	# 可以出牌的行 [-3,-2,-1,1,2,3],负数为对方战场
+        )
+```
+
+3. 注册卡牌
+
+```Python
+# Server.Mod.OriginalPackage.__init__
+
+from Mod.OriginalPackage import Unit
+from Mod.OriginalPackage import Skill
+from ExternalLibrary.ExternalLibrary import RegistrationCard
+RegistrationCard(
+    *4 * [Unit.Wolf()], # 向牌库中塞入4张狼
+)
+```
+
+#### 怎么写一个单位牌？（进阶）
+
+可以通过重写接口实现各种炫酷的技能。
+
+##### 出牌效果
+
+* 卡牌从手牌中打出的效果 
+
+```Python
+# UnitCard._deubt(self,ins) -> bool:
+# 	ins: pop所有[附加]指令参数
+#	return: 出牌是否合法，False将不可出牌
+#	函数将会在出牌时执行
+class Doppler(UnitCard):
+    def _debut(self, ins) -> bool:
+        try:
+            if (ins[1] != NoSpell):
+                card = self.ThisGame.UIDCardDict[ins[1]]
+                self.Name = card.Name + "（变形怪）"
+                self.SelfCombat = card.SelfCombat
+                self.Label = deepcopy(card.Label)
+                self.Level = card.Level
+            return True
+        except:
+            return False
         
-    }
-}
+# 可以在出牌效果中对目标施加某些状态魔法 or 造成伤害
+class DobbyGolem(UnitCard):
+    def _debut(self, ins) -> bool:
+        if (choice([True, False])):
+            self.AddStatus(self.effect)
+        return True
+    
+class GiantMalu(UnitCard):
+    def _debut(self, ins) -> bool:
+        self.ThisGame.UIDCardDict[ins[1]].GetDamage(randint(self.min_dmg, self.max_dmg), {"物理"})
+        return True
 ```
 
-* `scr`  项为字符串，是游戏对局屏幕的字符画形式，可以直接输出在屏幕上作为客户端屏幕显示
-* `dic` 项为字典，其中包括了全部游戏对局的信息
+##### 持续效果
 
-#### scr 示例
+* 卡牌登场效果
 
-```
-3: 
-2: 
-1: 
------------NA:Player1 CO:0, HE:3 GV:False CP:10 ----------
-Night
-Gl: 
------------NA:Player2 CO:0, HE:3 GV:False CP:10 ----------
-1: 
-2: 
-3: 
-It's you turn
-You are Player2 now，Board 0
-HandCards:
-0. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-1. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
-2. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-3. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-4. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-5. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
-6. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
-7. [UnitCard,帝国老兵,3,1,一名普普通通的士兵，本本分分的谋生],
-8. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
-9. [UnitCard,哥布林,2,1,小型的野生哥布林，是一种常见的魔物],
+```Python
+# 考虑到卡牌可能会不经过手牌打出
+# def UnitCard._selftoLineOn(self) -> bool:
+#	return: 一定返回True,没有含义
+#	函数将会在卡牌登场执行
+class Deusexmachina(UnitCard):
+    def _selftoLineOn(self) -> bool:
+        for card in self.OwnPlayer.UIDCardDict.values():
+            if (card.UID != self.UID):
+                card.AddShield(self.shield_give, {"机械"})
+		return True
+    
+# 有一种特殊的登场效果，为自身施加效果可以不用重写接口
+# self.Effect 中的效果出场自动施加
+class BigWolf(UnitCard):
+   	def __init__(self):
+    	self.Effect = [Effect.Nocturnal(self.night_combat_add), ]
 ```
 
+* 光环效果
+
+```python
+# 卡牌在场上时可以用光环影响其他人
+class DemonJay(UnitCard):
+    def __init__(self):
+    	self.ExiEffectOn = [-3, -2, -1, 1, 2, 3] # 影响范围
+    	self.ExiLabel = {"魔法", "恶魔"}	# 效果label
+    
+    # def UnitCard._exiEffect(self,target)
+    # 	target：影响目标(UnitCard)
+    #   return: 返回对目标的战斗力影响值，注意这里一定要返回值
+    def _exiEffect(self, target):
+        if (Is("普通生物", target) or Is("高等生物", target)):
+            return -self.exisEffectCmt
+        else:
+            return 0
+
+# 同时每一个单位都有一个响应光环影响的接口
+class WuZun(UnitCard):
+    # def UnitCard._combat_exis_effect(self,effect)
+    # 	effect：影响来源（UnitCard) 
+    #	return：返回对该效果影响的响应值，注意这里一定要返回值
+    def _combat_exis_effect(self, effect) -> int:
+        res, label = effect.ExiEffect(self) # 获取光环的影响值和label
+        if (res < 0): res *= (1 - self.debuf_off) # 自适应调整
+        return res	# 返回最终影响值
+```
+
+* 事件触发
+
+```python
+# 样例
+class Ghoul(UnitCard):
+    def __init__(self):
+         # 注册死亡触发器
+        self.Monitor_Death = True
+        
+	def _deathProcessing(self, event):
+        # 检测到别人死亡时战斗力增加
+        UID = event['para'][0]
+        if (UID != self.UID):
+            # self.SelfCombat += self.skill_carrion_increased_combat
+            self.AddSelfCombat(self.skill_carrion_increased_combat, {"特性"})
+
+# 单位卡拥有三种触发器接口：
+    self.Monitor_Death = False  # 死亡监视器
+    self.Monitor_Pop = False  # 出牌监视器
+    self.Monitor_GetDmg = False  # 单位受伤监视器
+  	# 触发器接口为 True 时，卡牌登场时会注册至全局触发器容器
+    
+# 发生对应事件会执行触发器
+    # 死亡触发器，event = {'type':'Death','para':[UID,UnitCard]}
+    # UID: 死亡卡牌uid
+    # UnitCard：死亡卡牌
+    def _deathProcessing(self, event):
+        return True
+    
+    # 出牌触发器，event = {'type':'Pop','para':[PlayerNO,Card]}
+    # PlayerNO：出牌玩家编号
+    # Card：打出的牌
+    def _popProcessing(self, event):
+        return True
+    
+    # 受伤触发器，event = {'type':'GetDmg','para':[UID,attack_res,cureDmg,UnitCard]}
+    # attack_res：0免疫 1受伤 2受伤且死亡
+    # cureDmg：实际攻击伤害
+    def _getDmgProcessing(self, event):
+        return True
+
+```
+
+* 其他
+
+```python
+# 受到攻击，扣血并返回伤害数值，0 表示免疫了伤害
+# 可以重写实现伤害减免，受伤释放技能等
+def _getDamage(self, num, effectLabel):
+    self.SelfCombat -= num # 扣血
+    return num
+
+# 受到回复，回复并返回回血数值，0 表示免疫了效果
+# 可以重写实现回复量调整，回复释放技能等
+def _addSelfCombat(self, num, effectLabel):
+    self.SelfCombat += num
+    return num
+
+# 是否可以死亡，返回False可以免疫死亡
+def _dead(self) -> bool:
+    return True
+
+# 同理还有护盾
+def _addShield(self, num, label):
+    self.ShieldValue += num
+    return num
+
+def _devShield(self, num, label):
+    sdmg = min(self.ShieldValue, num)
+    self.ShieldValue -= sdmg
+    return sdmg
+```
+
+##### 单位技能
+
+```python
+# 考虑实现一种主动技能机制，区别于出场效果，只要卡牌存活时，可以随时释放。
+# ComCard = {SkillCard:card_num,...}
+# 单位出场后玩家会获得 ComCard 中的所有法术牌，这些牌和该单位是绑定的
+# 只要该单位存活，可以随时释放这些法术牌
+# 但是当其死亡时，所有与其绑定的未释放法术牌会被强制弃牌
+class DeadSage(UnitCard):
+    def __init__(self):
+        self.ComCard = {Skill.TheFlameofBoredom(): self.card_num}
+```
 
 
-#### dic 示例
 
-```json
-{
-    "GlobalEffect":[],
-    "DayOrNight":true,
-    "NumberOfBoard":0,
-    "PlayCardQueue": [],
-    "Player":[
-        {
-            "HandCards":[],
-            "RawPileSize":20,
-            "UnitGrave":[],
-            "Lines":[[],[],[]],
-            "Name":"Msy",
-            "NO":0,
-            "Health":3,
-            "TolCombat":0
-        },
-        {
-            "HandCards":[],
-            "RawPileSize":20,
-            "UnitGrave":[],
-            "Lines":[[],[],[]],
-            "Name":"BladeHiker",
-            "NO":1,
-            "Health":3,
-            "TolCombat":0
-        }
-    ],
-    "YourNum":0,
-}
+#### 怎么写一个法术牌？
+
+1. 继承基类 `Server.Card.SkillCard`
+
+```python
+# 实现法术牌非常简单，常用接口只有出牌效果 _debut
+class Explosion(SkillCard):
+    def __init__(self):
+        self.minDamage = 0
+        self.maxDamage = 16
+        super().__init__(
+            name="爆裂魔法",
+            desc="某红魔大法师的招牌魔法，对敌方所有单位造成{}-{}点魔法伤害\n"
+                 "Explosion~!"
+                 "".format(self.minDamage, self.maxDamage),
+            level=4,
+            label={
+                "魔法"
+            }
+        )
+
+    # 与单位牌的 _debut 使用方法基本相同
+    def _debut(self, ins) -> bool:
+        for card in self.OwnPlayer.OpPlayer.UIDCardDict.values():
+            card.GetDamage(
+                randint(self.minDamage, self.maxDamage),
+                self.Label
+            )
+        return True
+
+```
+
+2. 注册卡牌
+
+```python
+# Server.Mod.OriginalPackage.__init__
+
+from Mod.OriginalPackage import Unit
+from Mod.OriginalPackage import Skill
+from ExternalLibrary.ExternalLibrary import RegistrationCard
+RegistrationCard(
+    *1 * [Skill.Explosion()], # 向牌库中塞入1张爆裂魔法
+)
 ```
 
