@@ -185,7 +185,7 @@ class UnitCard(Card):
         attack_res = 0
 
         # 护盾抗伤害
-        shiedDmg = 0;
+        shiedDmg = 0
         tmp = ""
         if (canUseShield):
             if (self.ShieldValue >= num):
@@ -205,11 +205,6 @@ class UnitCard(Card):
         if (cureDmg > 0):
             attack_res += 1
             self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + tmp + " 受到伤害 " + str(cureDmg))
-            # 注入受伤事件
-            self.ThisGame.eventMonitoring.Occurrence({
-                "type": "GetDmg",
-                "para": [self.UID, attack_res, cureDmg, self]
-            })
         else:
             self.ThisGame.Print_Message("单位 " + self.Name + "(" + str(self.UID) + ")" + tmp + " 免疫了伤害 ")
         if (self.SelfCombat < 0):
@@ -218,6 +213,13 @@ class UnitCard(Card):
             # 如果不死，默认战斗力归0，否者将优先遵循Dead()中对战斗力的设定
             elif (self.SelfCombat < 0):
                 self.SelfCombat = 0
+
+        # 注入攻击事件
+        self.ThisGame.eventMonitoring.Occurrence({
+            "type": "GetDmg",
+            "para": [self.UID, attack_res, cureDmg, self]
+        })
+
         return attack_res, cureDmg
 
     # 返回伤害数值，0 表示免疫了伤害

@@ -315,7 +315,7 @@ class MagicMissile(SkillCard):
 # pop i tarUID throw_i
 class DieImmediately(SkillCard):
     def __init__(self):
-        self.max_level_can = 4
+        self.max_level_can = 5
         super().__init__(
             name="格列姆的凝视",
             desc="雾行者高层持有的至上宝具，拥有夺取性命的能力，但使用需要付出同等的代价\n"

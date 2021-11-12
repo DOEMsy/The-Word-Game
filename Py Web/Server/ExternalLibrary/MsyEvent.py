@@ -11,7 +11,7 @@ class EventMonitoring(object):
         self.Triggers = {
             "Death":{}, # 单位死亡
             "Pop":{},   # 玩家出牌
-            "GetDmg":{},# 单位受伤
+            "GetDmg":{},# 单位受到攻击/受伤
         }  # 触发器
         '''
             event = 

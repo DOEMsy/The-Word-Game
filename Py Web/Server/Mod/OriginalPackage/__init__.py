@@ -71,6 +71,7 @@ RegistrationCard(
     Unit.GriefSeed(),
     *2 * [Unit.NothingnessVariant()],
     *2 * [Unit.SoulSeaWhale()],
+    Unit.HordaRego(),
 
     Skill.Explosion(),
     *3 * [Skill.BodyWeak()],

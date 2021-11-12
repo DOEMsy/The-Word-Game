@@ -133,10 +133,11 @@ class Player(object):
         self.ThrowCards_withIlist(range(len(self.HandCards)))
         return True
 
-    def ThrowCards_RandForNum(self, num) -> bool:
+    # 返回实际丢弃卡牌数目
+    def ThrowCards_RandForNum(self, num) -> int:
         num = min(num, len(self.HandCards))
         self.ThrowCards_withIlist(sample(range(len(self.HandCards)), num))
-        return True
+        return num
 
     # 计算战力
     def CalculateCombat(self) -> bool:

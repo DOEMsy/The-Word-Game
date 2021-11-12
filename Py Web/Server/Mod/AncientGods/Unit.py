@@ -132,7 +132,9 @@ class PlagueApocalypse(UnitCard):
         self.Monitor_GetDmg = True
     def  _getDmgProcessing(self, event):
         UID = event["para"][0]
-        if (UID != self.UID):
+        atc_res = event["para"][1]
+        # 受伤未死亡的单位立即濒死
+        if (UID != self.UID and atc_res==1):
             tagert = event['para'][3]
             tagert.SelfCombat = 0
         return True

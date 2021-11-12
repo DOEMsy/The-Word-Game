@@ -1615,8 +1615,8 @@ class DeadSage(UnitCard):
         super().__init__(
             name="死之大贤者",
             desc="死亡的化身，其存在严重扭曲了世间常理。\n"
-                 "◇骸骨操纵：打出时获取双方墓地卡牌数量和/2的护盾值，存在时场上每有一个单位死亡本卡护盾值增加目标等级{}\n"
-                 "◇来自死亡的力量：本卡增加双方墓地卡牌数量/2的战斗力，存在时场上每有一个单位死亡基础战斗力增加目标等级{}\n"
+                 "◇骸骨操纵：打出时获取双方墓地卡牌数量和/2的护盾值，存在时场上每有一个单位死亡本卡护盾值增加目标等级*{}\n"
+                 "◇来自死亡的力量：本卡增加双方墓地卡牌数量/2的战斗力，存在时场上每有一个单位死亡基础战斗力增加目标等级*{}\n"
                  "◇死亡化身：本卡免疫死亡。\n"
                  "◇厌生之焰：本卡至多可以释放{}次厌生之焰。"
                  "".format(self.shield_get_per_dead_lv_p * 100, self.cmt_get_per_dead_lv_p * 100, self.card_num),
@@ -1949,29 +1949,76 @@ class NicholasDuArundel(UnitCard):
         return False
 
 
-# --------------- 生命之种 -----------------
+# --------------- 维瑞塔斯的种子 -----------------
 
 class LifeSeed(UnitCard):
     def __init__(self):
         self.heal_per = 1
+        self.cnt = 0
+        self.status_code = 0
         super().__init__(
-            name="生命之种",
-            desc="世界之树的种子，存有无穷的生命力\n"
-                 "◇生机：无视死亡，每回合增加{}点基础战斗力"
+            name="一颗种子",
+            desc="维瑞塔斯的种子，蕴含超越常理的能量\n"
+                 "◇非战斗：没有战斗能力\n"
+                 "◇生机：无视场替和死亡，每回合增加{}点基础战斗力\n"
+                 "◇丰收：达成一定条件会获得某种奖励？"
                  "".format(self.heal_per),
             combat=0,
             level=4,
             label={
-                "自然",
+                "自然", "远古"
             },
             canto={3},
         )
+        self.Effect = [Effect.NotCombatUnit(), ]
 
+        self.ExiEffectOn = [-3,-2,-1,1,2,3]
+        self.ExiLabel = {'恶魔','魔法'}
+
+    # TODO 10.20 Test
     def _onCourt(self) -> bool:
         self.AddSelfCombat(self.heal_per, {"特性"})
+        self.cnt += 1
+        if (self.status_code == 0 and randint(0, 7) < self.cnt):
+            self.Name = "不知名的枝丫"
+            self.status_code += 1
+            self.cnt = 0
+        if (self.status_code == 1 and randint(0, 15) < self.cnt):
+            self.Name = "真理末梢"
+            self.Level = 5
+            self.Label.add("天使")
+            self.Label.add("恶魔")
+            self.status_code += 1
+            self.cnt = 0
+            # 随机置换双方至多3张手牌
+            num = self.OwnPlayer.ThrowCards_RandForNum(3)
+            self.OwnPlayer.GetCards(num)
+            num = self.OwnPlayer.OpPlayer.ThrowCards_RandForNum(3)
+            self.OwnPlayer.OpPlayer.GetCards(num)
+        if (self.status_code == 2 and randint(0, 31) < self.cnt):
+            self.Name = "维瑞塔斯的分身"
+            self.Label.add('神明')
+            self.status_code += 1
+            self.cnt = 0
+            # 双方现世单位失去战斗力 ,status_code = 3
+
+        # 双方抽卡，不需要重制cnt，越往后概率越高
+        if (self.status_code == 3 and randint(0, 63) < self.cnt):
+            self.OwnPlayer.GetCards(1)
+        if (self.status_code == 3 and randint(0, 63) < self.cnt):
+            self.OwnPlayer.OpPlayer.GetCards(1)
+
         return True
 
+    def _exiEffect(self,target):
+        if(self.status_code==3 and not Is('彼世生物',target)):
+            return -self.SelfCombat
+        return 0
+
     def _dead(self) -> bool:
+        return False
+
+    def _toNextTurn(self) -> bool:
         return False
 
 
@@ -2029,7 +2076,7 @@ class NothingnessVariant(UnitCard):
             name="虚无变体",
             desc="来自彼世的无形生命体，可以幻化成任何生物，任何形状\n"
                  "◇刺激反馈：受到的非神术伤害会全部转化为基础战斗力"
-                 "".format(self.cmt_line,self.min_add),
+                 "".format(self.cmt_line, self.min_add),
             combat=0,
             level=3,
             label={
@@ -2039,7 +2086,7 @@ class NothingnessVariant(UnitCard):
         )
 
     def _getDamage(self, num, effectLabel):
-        if(Has('神术',effectLabel)):
+        if (Has('神术', effectLabel)):
             self.SelfCombat -= num
             return num
         else:
@@ -2049,8 +2096,9 @@ class NothingnessVariant(UnitCard):
     def _addSelfCombat(self, num, effectLabel):
         # num+self.SelfCombat = 20 -> 20
         # num+self.SelfCombat > 20 -> 20 + 1 (溢出)
-        self.SelfCombat+=num
+        self.SelfCombat += num
         return num
+
 
 # --------------- 魂海鲸 -----------------
 
@@ -2084,3 +2132,50 @@ class SoulSeaWhale(UnitCard):
             return -999999
         else:
             return 0
+
+# --------------- 霍尔道斯 · 金 -----------------
+class HordaRego(UnitCard):
+    def __init__(self):
+        self.shield_add = 2
+        super().__init__(
+            name="霍尔道斯 · 金",
+            desc="银位冒险者，擅长剑术技艺\n"
+                 "◇守护：登场时，若自身不是己方唯一等级最低的单位，则为等级最低的一个单位+{}护盾"
+                 "".format(self.shield_add),
+            combat=6,
+            level=3,
+            label={
+                "人类","冒险者"
+            },
+            canto={1},
+        )
+
+    def _selftoLineOn(self):
+        target = self
+        for card in self.OwnPlayer.UIDCardDict.values():
+            if(card.Level <= target.Level):
+                target = card
+        if(target.UID != self.UID):
+            target.AddShield(self.shield_add,{"计略"})
+        return True
+
+# --------------- 赤浪人 -----------------
+class Ronin(UnitCard):
+    def __init__(self):
+        self.dmg_badao = 10
+        self.dmg_zhuiji = 4
+        self.cnt_zhuiji = 3
+        super().__init__(
+            name="赤浪人",
+            desc="传说中的冒险者，铂上位独狼，云游四海\n"
+                 "◇一文字追击：在场时，敌方单位受伤会被追击{}点物理伤害，每轮对同一名单位最多追击一次，每轮最多追击{}个单位\n"
+                 "◇境心读月："
+                 "".format(self.dmg_zhuiji,self.dmg_zhuiji),
+            combat=0,
+            level=3,
+            label={
+                "人类","冒险者"
+            },
+            canto={1},
+
+        )

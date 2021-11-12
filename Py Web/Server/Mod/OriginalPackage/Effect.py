@@ -146,3 +146,14 @@ class IncreaseCombatEffectivenessBasedOnTheNumberofCardsInGraveBothPlayers(Statu
                     len(self.AcctingOnWho.OwnPlayer.OpPlayer.UnitGrave)
             ) * self.basicCombatAmend
         )
+
+# --------------- 非战斗单位（战斗力<-0） -----------------
+
+class NotCombatUnit(SingleDebuffingBuffTemplate):
+    def __init__(self):
+        super().__init__(
+            name='非战斗',
+            desc='该单位是非战斗单位，战斗力为0',
+            combatAmend=999999999,
+            label={'特性'},
+        )
