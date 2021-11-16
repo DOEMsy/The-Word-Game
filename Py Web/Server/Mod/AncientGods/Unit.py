@@ -3,6 +3,7 @@ from random import sample, choice, randint
 import numpy as np
 from Card.UnitCard import UnitCard
 from ExternalLibrary.ExternalLibrary import NoSpell, ConcretizationCard
+from ExternalLibrary.MsyEvent import GetDmg
 from Game.Label import Has
 from Mod.AncientGods import Skill
 
@@ -130,12 +131,12 @@ class PlagueApocalypse(UnitCard):
             canto={2},
         )
         self.Monitor_GetDmg = True
-    def  _getDmgProcessing(self, event):
-        UID = event["para"][0]
-        atc_res = event["para"][1]
+    def  _getDmgProcessing(self, event:GetDmg):
+        UID = event.card.UID
+        cureDmg = event.cureDmg
         # 受伤未死亡的单位立即濒死
-        if (UID != self.UID and atc_res==1):
-            tagert = event['para'][3]
+        if (UID != self.UID and cureDmg>0):
+            tagert = event.card
             tagert.SelfCombat = 0
         return True
 

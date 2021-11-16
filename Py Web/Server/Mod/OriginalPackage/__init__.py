@@ -72,6 +72,7 @@ RegistrationCard(
     *2 * [Unit.NothingnessVariant()],
     *2 * [Unit.SoulSeaWhale()],
     Unit.HordaRego(),
+    Unit.Ronin(),
 
     Skill.Explosion(),
     *3 * [Skill.BodyWeak()],

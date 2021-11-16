@@ -8,7 +8,7 @@ from threading import Lock
 from time import sleep
 
 from ExternalLibrary.ExternalLibrary import GetUID, Throw_VisualizationError
-from ExternalLibrary.MsyEvent import EventMonitoring
+from ExternalLibrary.MsyEvent import EventMonitoring, Death
 from ExternalLibrary.MsyRPC import RPCServer, Channel
 from Game.Console import Console
 from Game.Player import Player
@@ -134,10 +134,11 @@ class Game(object):
     #       "type" : "Death",
     #       "para" : [UID,OwnNO]
     #   }
-    def DeathProcessing(self, event) -> bool:
-        UID = event['para'][0]
-        OwnNO = event['para'][1].OwnPlayer.NO
-        for line in self.Players[OwnNO].Lines:
+    def DeathProcessing(self, event:Death) -> bool:
+        ecard = event.card
+        UID = ecard.UID
+        player = ecard.OwnPlayer
+        for line in player.Lines:
             try:
                 for i in range(len(line)):
                     try:
@@ -145,21 +146,14 @@ class Game(object):
                         if (card.UID == UID):
                             line.pop(i)
                             self.Print_Message(
-                                self.Players[OwnNO].Name + " 的单位 " + self.UIDCardDict[UID].Name + "(" + str(
-                                    UID) + ")" + " 死亡")
+                                player.Name + " 的单位 " + self.UIDCardDict[UID].Name + "(" + str(UID) + ")" + " 死亡")
                     except:
                         pass
             except:
                 pass
-        try:
-            self.UIDCardDict.pop(UID)
-        except:
-            pass
-        try:
-            self.Players[OwnNO].UnitGrave.append(self.Players[OwnNO].UIDCardDict[UID])
-            self.Players[OwnNO].UIDCardDict.pop(UID)
-        except:
-            pass
+        self.UIDCardDict.pop(UID,None)
+        player.UnitGrave.append(ecard)
+        player.UIDCardDict.pop(UID,None)
 
         # for i in range(len(self.Players[OwnNO].Lines)):
         #    for j in range(len(self.Players[OwnNO].Lines[i])):

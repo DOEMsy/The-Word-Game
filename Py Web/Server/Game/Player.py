@@ -1,6 +1,7 @@
 from copy import deepcopy
 from random import randint, sample
 
+from ExternalLibrary import MsyEvent
 from ExternalLibrary.ExternalLibrary import toDict
 from Game.Label import Is
 
@@ -55,10 +56,11 @@ class Player(object):
                         self.HandCards.pop(i)
                         break
                 # 出牌事件
-                self.ThisGame.eventMonitoring.Occurrence({
-                    "type": "Pop",
-                    "para": [self.NO, card]
-                })
+                event = MsyEvent.Pop(
+                    card=card,
+                    player=self
+                )
+                self.ThisGame.eventMonitoring.Occurrence(event)
                 return True
             else:
                 return False

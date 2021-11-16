@@ -1,7 +1,9 @@
 from copy import deepcopy
 
 from Card.Card import *
+from ExternalLibrary import MsyEvent
 from ExternalLibrary.ExternalLibrary import toDict, INT, PackList
+from ExternalLibrary.MsyEvent import Death, Pop, GetDmg
 
 
 class UnitCard(Card):
@@ -179,8 +181,8 @@ class UnitCard(Card):
 
     # 受到伤害 基础战力
     # 返回值为受到该次攻击是否死亡
-    # 1，返回 0 没有受到伤害，返回 1 受到伤害，返回 2 受到伤害并死亡
-    # 2，受到伤害的实际数值
+    # 1:   返回 0 没有受到伤害，返回 1 受到伤害，返回 2 受到伤害并死亡
+    # 2:   受到伤害的实际数值
     def GetDamage(self, num, effectLabel, canUseShield=True):
         attack_res = 0
 
@@ -215,10 +217,12 @@ class UnitCard(Card):
                 self.SelfCombat = 0
 
         # 注入攻击事件
-        self.ThisGame.eventMonitoring.Occurrence({
-            "type": "GetDmg",
-            "para": [self.UID, attack_res, cureDmg, self]
-        })
+        event = MsyEvent.GetDmg(
+            card=self,
+            shieldDmg=shiedDmg,
+            cureDmg=cureDmg
+        )
+        self.ThisGame.eventMonitoring.Occurrence(event)
 
         return attack_res, cureDmg
 
@@ -250,10 +254,10 @@ class UnitCard(Card):
             self.Alive = False
 
             # 发送死亡信号
-            self.ThisGame.eventMonitoring.Occurrence({
-                "type": "Death",
-                "para": [self.UID, self]
-            })
+            event = MsyEvent.Death(
+                card=self,
+            )
+            self.ThisGame.eventMonitoring.Occurrence(event)
 
             # 吊销指令卡牌
             self.OwnPlayer.ThrowCards_withUIDList(self._comCardUIDList)
@@ -282,7 +286,7 @@ class UnitCard(Card):
     #       "para" : [UID,OwnNO]
     #   }
     #
-    def DeathProcessing(self, event):
+    def DeathProcessing(self, event:Death):
         self._deathProcessing(event)
         # 在死亡触发操作中 注销死亡触发器，保证死亡监测函数可以使用
         UID = event['para'][0]
@@ -290,19 +294,19 @@ class UnitCard(Card):
             self.ThisGame.eventMonitoring.UnBundledTrigger("Death", self)
         return True
 
-    def _deathProcessing(self, event):
+    def _deathProcessing(self, event:Death):
         return True
 
-    def PopProcessing(self, event):
+    def PopProcessing(self, event:Pop):
         self._popProcessing(event)
 
-    def _popProcessing(self, event):
+    def _popProcessing(self, event:Pop):
         return True
 
-    def GetDmgProcessing(self, event):
+    def GetDmgProcessing(self, event:GetDmg):
         self._getDmgProcessing(event)
 
-    def _getDmgProcessing(self, event):
+    def _getDmgProcessing(self, event:GetDmg):
         return True
 
     # 转换长字串

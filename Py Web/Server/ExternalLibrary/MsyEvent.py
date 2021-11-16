@@ -2,6 +2,44 @@ import _thread
 from threading import Lock
 from time import sleep
 
+# from Card.UnitCard import UnitCard
+# from Game.Player import Player
+
+
+class Event(object):
+    def __init__(self, etype):
+        self.etype = etype
+
+    def __str__(self):
+        return "Event(eytpe={})".format(self.etype)
+
+class Death(Event):
+    # 死亡卡牌
+    def __init__(self, card):
+        super().__init__("Death")
+        self.card = card
+
+    def __str__(self):
+        return "Event(eytpe={},card={})".format(self.etype,self.card.sstr())
+
+class Pop(Event):
+    # 卡牌 出牌玩家
+    def __init__(self, card, player):
+        super().__init__("Pop")
+        self.card = card
+        self.player = player
+
+    def __str__(self):
+        return "Event(eytpe={},player={})".format(self.etype,self.player.NO)
+
+class GetDmg(Event):
+    # 卡牌 护盾伤害 本体伤害
+    def __init__(self, card, shieldDmg, cureDmg):
+        super().__init__("GetDmg")
+        self.card = card
+        self.shieldDmg = shieldDmg
+        self.cureDmg = cureDmg
+
 
 class EventMonitoring(object):
     def __init__(self):
@@ -9,20 +47,11 @@ class EventMonitoring(object):
         self.events = []  # 总线
         self.events_size = 0  # 总线大小
         self.Triggers = {
-            "Death":{}, # 单位死亡
-            "Pop":{},   # 玩家出牌
-            "GetDmg":{},# 单位受到攻击/受伤
+            "Death": {},  # 单位死亡
+            "Pop": {},  # 玩家出牌
+            "GetDmg": {},  # 单位受到攻击/受伤
         }  # 触发器
-        '''
-            event = 
-                {
-                    "type":"",  #事件类型
-                    "para":[    #事件参数
 
-                    ]
-                }
-            
-        '''
         self.eventLock = Lock()  # 总线锁
 
         _thread.start_new_thread(self.HandleEvents, ())
@@ -43,10 +72,7 @@ class EventMonitoring(object):
     # 注销触发器
     def UnBundledTrigger(self, type, trigger):
         self.eventLock.acquire()
-        try:
-            self.Triggers[type].pop(trigger.UID)
-        except:
-            pass
+        self.Triggers[type].pop(trigger.UID, None)
         self.eventLock.release()
 
     # 处理事件
@@ -54,42 +80,27 @@ class EventMonitoring(object):
         while True:
             event = None
             self.eventLock.acquire()
-            try:
+            if self.events_size > 0:
                 event = self.events.pop(0)
                 self.events_size -= 1
-            except:
-                pass
             self.eventLock.release()
 
             if (event != None):
                 # 需要修改游戏数据，获取游戏锁
                 self.ThisGame.gameLock.acquire()
-                # 单位死亡
-                if (event["type"] == "Death"):
-                    for trig in list(self.Triggers[event["type"]].values()):
-                        try:
+
+                etype = event.etype
+                for trig in self.Triggers[etype].values():
+                    try:
+                        if (etype == "Death"):
                             trig.DeathProcessing(event)
-                        except Exception as e:
-                            print("event death error:", repr(e))
-                # 玩家出牌
-                elif (event["type"] == "Pop"):
-                    for trig in list(self.Triggers[event["type"]].values()):
-                        try:
+                        elif (etype == "Pop"):
                             trig.PopProcessing(event)
-                        except Exception as e:
-                            print("event pop error:", repr(e))
-                # 单位受伤
-                elif (event["type"] == "GetDmg"):
-                    for trig in list(self.Triggers[event["type"]].values()):
-                        try:
+                        elif (etype == "GetDmg"):
                             trig.GetDmgProcessing(event)
-                        except Exception as e:
-                            print("event pop error:", repr(e))
+                    except Exception as e:
+                        print("event error:", Event,repr(e))
 
-
-                # 待定
-                elif (event["type"] == "?"):
-                    pass
                 self.ThisGame.gameLock.release()
             else:
                 sleep(0.01)

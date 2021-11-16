@@ -6,6 +6,7 @@ import numpy as np
 from Card.StatusEffect import StatusEffect
 from Card.UnitCard import UnitCard
 from ExternalLibrary.ExternalLibrary import GetUID, NoSpell, ConcretizationCard, GetRandCard
+from ExternalLibrary.MsyEvent import Death, Pop, GetDmg
 from Game.Label import Has, Is
 from Mod.OriginalPackage import Effect, Skill
 
@@ -78,9 +79,9 @@ class Ghoul(UnitCard):
         # 注册死亡触发器
         self.Monitor_Death = True
 
-    def _deathProcessing(self, event):
+    def _deathProcessing(self, event: Death):
         # 检测到别人死亡时战斗力增加
-        UID = event['para'][0]
+        UID = event.card.UID
         if (UID != self.UID):
             # self.SelfCombat += self.skill_carrion_increased_combat
             self.AddSelfCombat(self.skill_carrion_increased_combat, {"特性"})
@@ -159,9 +160,9 @@ class GiantGhoul(UnitCard):
         # 注册死亡触发器
         self.Monitor_Death = True
 
-    def _deathProcessing(self, event):
+    def _deathProcessing(self, event: Death):
         # 检测到别人死亡时战斗力增加
-        UID = event['para'][0]
+        UID = event.card.UID
         if (UID != self.UID):
             # self.SelfCombat += self.skill_carrion_increased_combat
             self.AddSelfCombat(self.skill_carrion_increased_combat, {"特性"})
@@ -187,9 +188,9 @@ class OneEyedGhoul(UnitCard):
         # 注册死亡触发器
         self.Monitor_Death = True
 
-    def _deathProcessing(self, event):
+    def _deathProcessing(self, event: Death):
         # 检测到别人死亡时战斗力增加
-        UID = event['para'][0]
+        UID = event.card.UID
         if (UID != self.UID):
             # self.SelfCombat += self.skill_carrion_increased_combat
             self.AddSelfCombat(self.skill_carrion_increased_combat, {"特性"})
@@ -217,9 +218,9 @@ class LittlePudding(UnitCard):
         # 注册死亡触发器
         self.Monitor_Death = True
 
-    def _deathProcessing(self, event):
+    def _deathProcessing(self, event: Death):
         # 检测到别人死亡时战斗力增加
-        UID = event['para'][0]
+        UID = event.card.UID
         if (UID != self.UID):
             # self.SelfCombat += self.skill_carrion_increased_combat
             self.AddSelfCombat(self.skill_carrion_increased_combat, {"特性"})
@@ -631,9 +632,9 @@ class RabbitWart(UnitCard):
 
         return True
 
-    def _deathProcessing(self, event):
+    def _deathProcessing(self, event: Death):
         # 分裂，死亡时变成两个小兔疣
-        UID = event['para'][0]
+        UID = event.card.UID
         if (UID == self.UID):
             summonNum = randint(self.min_fenlie, self.max_fenlie)
             for _ in range(summonNum):
@@ -813,9 +814,9 @@ class MotherofGhosts(UnitCard):
             self.ThisGame.AddCardToLine(self.OwnPlayer, ins[0] - 1, card)
         return True
 
-    def _deathProcessing(self, event):
+    def _deathProcessing(self, event: Death):
         # 束灵 检测到别人死亡
-        UID = event['para'][0]
+        UID = event.card.UID
         if (UID != self.UID):
             # self.SelfCombat += self.skill_carrion_increased_combat
             card = ConcretizationCard(self.summon)
@@ -845,9 +846,9 @@ class MagicSource(UnitCard):
         # 注册出牌触发器
         self.Monitor_Pop = True
 
-    def _popProcessing(self, event):
-        NO = event["para"][0]
-        card_pop = event["para"][1]
+    def _popProcessing(self, event: Pop):
+        NO = event.player.NO
+        card_pop = event.card
         if (NO == self.OwnPlayer.NO and card_pop.UID != self.UID):
             if (Is("魔法", card_pop) or Is("魔法生物", card_pop)):
                 card = ConcretizationCard(self.summon)
@@ -1246,8 +1247,8 @@ class Leviathan(UnitCard):
         self.OwnPlayer.ThrowCards_ALL()
         return True
 
-    def _popProcessing(self, event):
-        NO = event["para"][0]
+    def _popProcessing(self, event: Pop):
+        NO = event.player.NO
         if (NO == self.OwnPlayer.OpPlayer.NO):
             card = ConcretizationCard(choice(
                 GetRandCard({"Level": 3, "Label": {"虫"}}, 1) +
@@ -1590,9 +1591,9 @@ class Deusexmachina(UnitCard):
                 card.AddShield(self.shield_give, {"机械"})
         return True
 
-    def _popProcessing(self, event):
-        NO = event["para"][0]
-        card_pop = event["para"][1]
+    def _popProcessing(self, event: Pop):
+        NO = event.player.NO
+        card_pop = event.card
         if (NO == self.OwnPlayer.NO and card_pop.Type == "UnitCard"):
             if (card_pop.UID != self.UID):
                 card_pop.AddShield(self.shield_give, {"机械"})
@@ -1643,10 +1644,10 @@ class DeadSage(UnitCard):
         self.AddShield((len(self.OwnPlayer.UnitGrave) + len(self.OwnPlayer.OpPlayer.UnitGrave)) // 2, {"魔法"})
         return True
 
-    def _deathProcessing(self, event):
-        UID = event['para'][0]
+    def _deathProcessing(self, event: Death):
+        UID = event.card.UID
         if (UID != self.UID):
-            dead_target = event['para'][1]
+            dead_target = event.card
             level = dead_target.Level
             self.AddShield(self.shield_get_per_dead_lv_p * level, {"魔法"})
             self.AddSelfCombat(self.cmt_get_per_dead_lv_p * level, {"魔法"})
@@ -1711,9 +1712,9 @@ class TheDomeofSky(UnitCard):
                 card.AddShield(self.shield_add, {"魔法"})
         return True
 
-    def _popProcessing(self, event):
-        NO = event["para"][0]
-        card_pop = event["para"][1]
+    def _popProcessing(self, event: Pop):
+        NO = event.player.NO
+        card_pop = event.card
         if (NO == self.OwnPlayer.NO and card_pop.Type == "UnitCard"):
             if (card_pop.UID != self.UID):
                 card_pop.AddShield(self.shield_add, {"魔法"})
@@ -1902,10 +1903,10 @@ class AncientGorefiend(UnitCard):
         }
     '''
 
-    def _getDmgProcessing(self, event):
-        UID = event["para"][0]
+    def _getDmgProcessing(self, event: GetDmg):
+        UID = event.card.UID
         if (UID != self.UID):
-            cureDmg = event['para'][2]
+            cureDmg = event.cureDmg
             self.AddSelfCombat(cureDmg * self.cmt_add_p, {"特性"})
         return True
 
@@ -1972,8 +1973,8 @@ class LifeSeed(UnitCard):
         )
         self.Effect = [Effect.NotCombatUnit(), ]
 
-        self.ExiEffectOn = [-3,-2,-1,1,2,3]
-        self.ExiLabel = {'恶魔','魔法'}
+        self.ExiEffectOn = [-3, -2, -1, 1, 2, 3]
+        self.ExiLabel = {'恶魔', '魔法'}
 
     # TODO 10.20 Test
     def _onCourt(self) -> bool:
@@ -2010,8 +2011,8 @@ class LifeSeed(UnitCard):
 
         return True
 
-    def _exiEffect(self,target):
-        if(self.status_code==3 and not Is('彼世生物',target)):
+    def _exiEffect(self, target):
+        if (self.status_code == 3 and not Is('彼世生物', target)):
             return -self.SelfCombat
         return 0
 
@@ -2133,6 +2134,7 @@ class SoulSeaWhale(UnitCard):
         else:
             return 0
 
+
 # --------------- 霍尔道斯 · 金 -----------------
 class HordaRego(UnitCard):
     def __init__(self):
@@ -2145,7 +2147,7 @@ class HordaRego(UnitCard):
             combat=6,
             level=3,
             label={
-                "人类","冒险者"
+                "人类", "冒险者"
             },
             canto={1},
         )
@@ -2153,29 +2155,70 @@ class HordaRego(UnitCard):
     def _selftoLineOn(self):
         target = self
         for card in self.OwnPlayer.UIDCardDict.values():
-            if(card.Level <= target.Level):
+            if (card.Level <= target.Level):
                 target = card
-        if(target.UID != self.UID):
-            target.AddShield(self.shield_add,{"计略"})
+        if (target.UID != self.UID):
+            target.AddShield(self.shield_add, {"计略"})
         return True
+
 
 # --------------- 赤浪人 -----------------
 class Ronin(UnitCard):
     def __init__(self):
-        self.dmg_badao = 10
         self.dmg_zhuiji = 4
         self.cnt_zhuiji = 3
         super().__init__(
             name="赤浪人",
             desc="传说中的冒险者，铂上位独狼，云游四海\n"
-                 "◇一文字追击：在场时，敌方单位受伤会被追击{}点物理伤害，每轮对同一名单位最多追击一次，每轮最多追击{}个单位\n"
-                 "◇境心读月："
-                 "".format(self.dmg_zhuiji,self.dmg_zhuiji),
+                 "◇一文字追击：在场时，敌方单位被攻击就会追击{}点物理伤害，每轮对同一名单位最多追击一次，每轮最多追击{}个单位\n"
+                 "◇境心：拥有一次免疫本轮所有魔法和物理伤害的机会，在即将受到伤害时触发\n"
+                 "◇读月：触发境心后，所有免疫的伤害有66%概率会被反弹给随机敌人"
+                 "".format(self.dmg_zhuiji, self.dmg_zhuiji),
             combat=0,
-            level=3,
+            level=4,
             label={
-                "人类","冒险者"
+                "人类", "冒险者"
             },
             canto={1},
 
         )
+        self.Monitor_GetDmg = True
+        self.zhuiji_uid_set = set()
+        self.can_jingxin = True
+        self.skip_dmg_cnt = 0
+
+    def _getDmgProcessing(self, event: GetDmg):
+        UID = event.card.UID
+        NO = event.card.OwnNO
+        cureDmg = event.cureDmg
+        shieldDmg = event.shieldDmg
+        if (
+                UID != self.UID and
+                NO != self.OwnNO and
+                cureDmg + shieldDmg > 0 and
+                len(self.zhuiji_uid_set) < self.cnt_zhuiji and
+                UID not in self.zhuiji_uid_set
+        ):
+            card = event.card
+            self.zhuiji_uid_set.add(UID)
+            card.GetDamage(self.dmg_zhuiji, {"物理"})
+
+        return True
+
+    def _getDamage(self, num, effectLabel):
+        if (Has("魔法", effectLabel) or Has("物理", effectLabel)) and self.can_jingxin:
+            self.skip_dmg_cnt += 1
+            if choice([True, True, False]):
+                target = choice(self.ThisGame.UIDCardDict.values())
+                target.GetDamage(num, effectLabel)
+            return 0
+        else:
+            self.SelfCombat -= num
+            return num
+
+    def _onCourt(self) -> bool:
+        self.zhuiji_uid_set.clear()
+        if self.can_jingxin and self.skip_dmg_cnt > 0:
+            self.can_jingxin = False
+            self.skip_dmg_cnt = 0
+        return True
