@@ -320,9 +320,9 @@ class UnitCard(Card):
         cbt = self.Combat()
         res = ""
         res += "[{},{},{}".format(self.UID, self.Name, self.SelfCombat)
-        if (cbt > self.SelfCombat):    res += "(+{})".format(cbt - self.SelfCombat)
-        if (cbt < self.SelfCombat):    res += "(-{})".format(self.SelfCombat - cbt)
-        if (self.ShieldValue > 0):       res += "[{}]".format(self.ShieldValue)
+        if (cbt > self.SelfCombat):    res += "(+%.1f)"%(cbt - self.SelfCombat)
+        if (cbt < self.SelfCombat):    res += "(-%.1f)"%(self.SelfCombat - cbt)
+        if (self.ShieldValue > 0):       res += "[%.1f]"%(self.ShieldValue)
         res += ",lv{}]".format(self.Level)
         return res
 

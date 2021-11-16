@@ -27,9 +27,24 @@ class Player(object):
         self.Health = 3  # int 玩家生命值
         self.TolCombat = 0  # int 玩家总战力
 
+        self.POP_POINT_MAX = 5
+        self.POP_POINT = 0
+        self.POP_DONE = False
         self.ActionAttributeValue = {"禁咒":0}
 
-    # 出牌
+    def Reload_POP_POINT(self):
+        self.POP_POINT = self.POP_POINT_MAX
+        self.POP_DONE = False
+        self.Sort_Hand_Card()
+
+
+    def UpLevel_POP_POINT_MAX(self):
+        self.POP_POINT_MAX += 2
+
+    def Sort_Hand_Card(self):
+        self.HandCards.sort(key=lambda x:x.Level)
+
+    # 出牌 每轮可以出8点（level）
     def PopCard(self, ins) -> bool:
         try:
             card_i = int(ins[0])
@@ -39,7 +54,7 @@ class Player(object):
             # 自动补全 type uid
             ins = ins[0:1] + [card.Type,card.UID] + ins[1:]
 
-            if (card.Play(self, ins[1:])):
+            if (card.Level<=self.POP_POINT and card.Play(self, ins[1:])):
                 # 历史出牌队列
                 self.ThisGame.PlayCardQueue.append(card)
                 # 发送出牌消息
@@ -55,6 +70,9 @@ class Player(object):
                     if (self.HandCards[i].UID == card.UID):
                         self.HandCards.pop(i)
                         break
+
+                self.POP_POINT -= card.Level
+
                 # 出牌事件
                 event = MsyEvent.Pop(
                     card=card,
@@ -67,6 +85,45 @@ class Player(object):
         except Exception as e:
             print("player pop error:", repr(e))
             return False
+
+    # # 出牌
+    # def PopCard(self, ins) -> bool:
+    #     try:
+    #         card_i = int(ins[0])
+    #         if (len(self.HandCards) <= card_i): return False
+    #         card = self.HandCards[card_i]
+    #
+    #         # 自动补全 type uid
+    #         ins = ins[0:1] + [card.Type,card.UID] + ins[1:]
+    #
+    #         if (card.Play(self, ins[1:])):
+    #             # 历史出牌队列
+    #             self.ThisGame.PlayCardQueue.append(card)
+    #             # 发送出牌消息
+    #             self.ThisGame.Print_Message("! " + self.Name + " 打出卡牌:\n" + card.lstr())
+    #
+    #             # 玩家累计属性
+    #             if(Is("禁咒",card)): self.ActionAttributeValue["禁咒"]+=1
+    #
+    #
+    #             # 卡牌在操作过程中有可能改变卡牌顺序，要使用UID删除
+    #             # del self.HandCards[card_i]
+    #             for i in range(len(self.HandCards)):
+    #                 if (self.HandCards[i].UID == card.UID):
+    #                     self.HandCards.pop(i)
+    #                     break
+    #             # 出牌事件
+    #             event = MsyEvent.Pop(
+    #                 card=card,
+    #                 player=self
+    #             )
+    #             self.ThisGame.eventMonitoring.Occurrence(event)
+    #             return True
+    #         else:
+    #             return False
+    #     except Exception as e:
+    #         print("player pop error:", repr(e))
+    #         return False
 
     # 获取卡牌
     def Pump(self, card):

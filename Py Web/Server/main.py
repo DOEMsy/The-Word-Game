@@ -90,19 +90,25 @@ while (game.Players[0].Health > 0 and game.Players[1].Health > 0):
     while ((not fstPlayer.IsAbstain) or (not secPlayer.IsAbstain)):
         game.SettlementRound()
         game.CalculateCombat()
-        if (not fstPlayer.IsAbstain):
-            game.PrintScreen(fstPlayer.NO, True)
-            game.PrintScreen(secPlayer.NO)
-            game.GetAndCROInstructions(fstPlayer.NO)
-            fstPlayer.SettlementOnCourtSkill()
-            # game.DeathDetection()
-            game.CalculateCombat()
+        if(not fstPlayer.IsAbstain):
+            fstPlayer.Reload_POP_POINT()
+            while (not fstPlayer.POP_DONE and fstPlayer.POP_POINT>0):
+                game.PrintScreen(fstPlayer.NO, True)
+                game.PrintScreen(secPlayer.NO)
+                game.GetAndCROInstructions(fstPlayer.NO)
+                # game.DeathDetection()
+                game.CalculateCombat()
+        fstPlayer.SettlementOnCourtSkill(),game.CalculateCombat()
         if (not secPlayer.IsAbstain):
-            game.PrintScreen(fstPlayer.NO)
-            game.PrintScreen(secPlayer.NO, True)
-            game.GetAndCROInstructions(secPlayer.NO)
-            secPlayer.SettlementOnCourtSkill()
-            # game.DeathDetection()
-            game.CalculateCombat()
+            secPlayer.Reload_POP_POINT()
+            while (not secPlayer.POP_DONE and secPlayer.POP_POINT > 0):
+                game.PrintScreen(fstPlayer.NO)
+                game.PrintScreen(secPlayer.NO, True)
+                game.GetAndCROInstructions(secPlayer.NO)
+                # game.DeathDetection()
+                game.CalculateCombat()
+        secPlayer.SettlementOnCourtSkill(),game.CalculateCombat()
     game.SettlementToNextInnings()
+    fstPlayer.UpLevel_POP_POINT_MAX()
+    secPlayer.UpLevel_POP_POINT_MAX()
 game.NormalEnd()

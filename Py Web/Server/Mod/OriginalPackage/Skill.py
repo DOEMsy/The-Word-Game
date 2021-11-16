@@ -901,7 +901,7 @@ class DivineRefuge(SkillCard):
 
 
 # --------------- 谜团 只能通过弗兰德斯获取 -----------------
-
+# TODO 可以再大胆一些 2021.11.17
 class Mystery(SkillCard):
     def __init__(self):
         super().__init__(
@@ -1385,7 +1385,7 @@ class SymbioticCrystal(SkillCard):
             name="共生晶化护盾",
             desc="通过吸食宿主共生的晶体护盾层\n"
                  "◇晶化护盾：对目标造成{}点伤害，目标实际受到伤害的{}%转化为护盾"
-                 "".format(self.dmg,self.sldcg),
+                 "".format(self.dmg,self.sldcg*100),
             level=2,
             label={
                 "魔法","自然"

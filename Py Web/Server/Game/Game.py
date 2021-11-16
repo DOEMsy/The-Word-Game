@@ -320,7 +320,7 @@ class Game(object):
                 self.Clients[NO].PushResp(Resp(
                     player_NO=NO,
                     ins="inp",
-                    msg="[" + msg + ",%d]" % ct,
+                    msg="[" + msg + ",%d,POP_POINT:%d/%d]" % (ct,player.POP_POINT,player.POP_POINT_MAX),
                 ))
                 if (ct == 0):
                     self.Clients[abs(NO - 1)].PushResp(Resp(
@@ -332,7 +332,12 @@ class Game(object):
                 ins = req.ins
                 if (ins == "giveup"):
                     player.IsAbstain = True
+                    player.POP_DONE = True
                     self.Print_Message(player.Name + " 弃权了 ")
+                    break
+                elif (ins == "pass"):
+                    player.POP_DONE = True
+                    self.Print_Message(player.Name + " 结束了出牌 ")
                     break
                 elif (ins == "pop"):
                     '''
@@ -349,8 +354,6 @@ class Game(object):
                     '''
                     if (player.PopCard(req.para)):
                         break
-                    else:
-                        pass
                 # elif (ins[0] == "get"):
                 #    if (len(ins) >= 2):
                 #        player.GetCards(int(ins[1]))
