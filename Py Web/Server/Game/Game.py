@@ -335,7 +335,8 @@ class Game(object):
                     player.POP_DONE = True
                     self.Print_Message(player.Name + " 弃权了 ")
                     break
-                elif (ins == "pass"):
+                # 不允许玩家不出牌直接pass
+                elif (ins == "pass" and player.POP_POINT<player.POP_POINT_MAX):
                     player.POP_DONE = True
                     self.Print_Message(player.Name + " 结束了出牌 ")
                     break

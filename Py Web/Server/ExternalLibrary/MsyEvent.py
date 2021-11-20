@@ -90,7 +90,8 @@ class EventMonitoring(object):
                 self.ThisGame.gameLock.acquire()
 
                 etype = event.etype
-                for trig in self.Triggers[etype].values():
+                # 这里必须用一个list把trig从字典中拿出来，才能支持在事件中注销触发器的操作
+                for trig in list(self.Triggers[etype].values()):
                     try:
                         if (etype == "Death"):
                             trig.DeathProcessing(event)

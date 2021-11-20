@@ -7,13 +7,17 @@ from Game.Game import Game
 import Mod
 import time
 import random
+import numpy as np
 
 from Mod.OriginalPackage.Skill import LuckyCoin, GreatPatrioticWar, LightningStrike
 from Mod.OriginalPackage.Unit import Irinas, Leviathan, DemonJay, C_999, HighPriestofAltoMadike, \
     MoonbearclassAerialBattleship, K_902
 
+
 seed = int(time.time())
 random.seed(seed)
+np.random.seed(seed)
+
 game = Game()
 game.StartServer()
 

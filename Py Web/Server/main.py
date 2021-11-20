@@ -7,9 +7,11 @@ from Game.Game import Game
 import Mod
 import time
 import random
+import numpy as np
 
 seed = int(time.time())
 random.seed(seed)
+np.random.seed(seed)
 
 game = Game()
 game.StartServer()

@@ -50,7 +50,7 @@ class UnitCard(Card):
                     # self.ThisGame.UIDCardDict[self.UID] = self
                 # 打到对面牌区
                 elif (-3 <= to[0] < 0 and self.Debut(to)):
-                    self.ThisGame.AddCardToLine(player.OpPlayer, 1 - to[0], self)
+                    self.ThisGame.AddCardToLine(player.OpPlayer, -1 - to[0], self)
                     return True
                     # elif (-3 <= to[0] < 0 and self.Debut(to)):
                     #    player.OpPlayer.Lines[-1 - to[0]].append(self)

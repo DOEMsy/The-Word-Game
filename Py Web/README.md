@@ -149,8 +149,6 @@ class GiantMalu(UnitCard):
         return True
 ```
 
-##### 持续效果
-
 * 卡牌登场效果
 
 ```Python
@@ -171,6 +169,8 @@ class BigWolf(UnitCard):
    	def __init__(self):
     	self.Effect = [Effect.Nocturnal(self.night_combat_add), ]
 ```
+
+##### 持续效果
 
 * 光环效果
 

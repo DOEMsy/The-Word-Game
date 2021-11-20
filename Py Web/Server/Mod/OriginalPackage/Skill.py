@@ -1233,13 +1233,13 @@ class GuardianWideArea(SkillCard):
 # 只能通过战列舰获得
 class OpenFire(SkillCard):
     def __init__(self):
-        self.target_max_num = 4
+        self.target_max_num = 5
         self.target_min_num = 1
-        self.max_dmg = 2
+        self.max_dmg = 3
         self.min_dmg = 1
         super().__init__(
             name="开火",
-            desc="命令战列舰开火，对敌方1~4名敌人造成1~2点随机的 物理伤害。"
+            desc="命令战列舰开火，对敌方1~5名敌人造成1~3点随机的 物理伤害。"
                  "".format(),
             level=3,
             label={
@@ -1325,7 +1325,7 @@ class SacrificeStone(SkillCard):
 
 class CrystallizationRay(SkillCard):
     def __init__(self):
-        self.dmg = 8
+        self.dmg = 10
         self.sldcg = 0.5
         super().__init__(
             name="晶化射线",

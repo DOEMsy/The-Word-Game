@@ -24,7 +24,7 @@ class Player(object):
 
         self.Name = Name  # str 玩家名
         self.NO = NO  # int 玩家编号
-        self.Health = 3  # int 玩家生命值
+        self.Health = 2  # int 玩家生命值
         self.TolCombat = 0  # int 玩家总战力
 
         self.POP_POINT_MAX = 5

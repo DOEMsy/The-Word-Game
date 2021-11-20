@@ -62,3 +62,5 @@ class Colorless(SkillCard):
         self.ThisGame.InningsReplacement()
         self.OwnPlayer.ThrowCards_RandForNum(self.throw_num)
         return True
+
+# --------------- 契约·紫色 -----------------
