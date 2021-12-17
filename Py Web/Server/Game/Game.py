@@ -14,6 +14,7 @@ from Game.Console import Console
 from Game.Player import Player
 from idl.game.ttypes import Resp
 
+from AI import Foolish
 
 class Game(object):
     def __init__(self):
@@ -46,7 +47,7 @@ class Game(object):
         self.console = Console(self)
 
     # 开启游戏服务器
-    def StartServer(self) -> bool:
+    def StartServerPvP(self) -> bool:
         # Console Socket
         # _thread.start_new_thread(self.console.StartServer, ())
 
@@ -66,6 +67,52 @@ class Game(object):
         self.gameLock.release()
         return True
 
+    # 开启游戏服务器
+    def StartServerPvE(self) -> bool:
+        # Console Socket
+        # _thread.start_new_thread(self.console.StartServer, ())
+
+        # 挂载AI
+        model = Foolish.Model()
+        self.Players[1].Load_AI(model)
+
+        # P2 Socket
+        self.gameLock.acquire()
+        self.Host = "127.0.0.1"  # socket.gethostname()
+        self.Port = 27018
+        self.Clients = {0: Channel(), 1: Channel()}  # player_NO:Channel
+        self.gameServer = RPCServer(self, self.Host, self.Port)  # 游戏服务器
+        self.gameServer.start()
+
+        # 等待玩家连接
+        print("等待玩家连接...")
+        self.Clients[0].GetReq()
+
+        self.gameLock.release()
+        return True
+
+    # 开启游戏服务器
+    def StartServerEvE(self) -> bool:
+        # Console Socket
+        # _thread.start_new_thread(self.console.StartServer, ())
+
+        # 挂载AI
+        model0 = Foolish.Model()
+        model1 = Foolish.Model()
+        self.Players[0].Load_AI(model0)
+        self.Players[1].Load_AI(model1)
+
+        # P2 Socket
+        self.gameLock.acquire()
+        self.Host = "127.0.0.1"  # socket.gethostname()
+        self.Port = 27018
+        self.Clients = {0: Channel(), 1: Channel()}  # player_NO:Channel
+        self.gameServer = RPCServer(self, self.Host, self.Port)  # 游戏服务器
+        self.gameServer.start()
+
+        self.gameLock.release()
+        return True
+
     # 结算局
     def SettlementToNextInnings(self) -> bool:
         self.gameLock.acquire()
@@ -73,9 +120,9 @@ class Game(object):
         for player in self.Players:
             if (player.TolCombat == minCombat):
                 player.Health -= 1
-                player.GetCards(4)  # 失败者获取3张牌
+                player.GetCards(4)  # 失败者获取x张牌
             else:
-                player.GetCards(4)  # 胜利者获取3张牌
+                player.GetCards(4)  # 胜利者获取x张牌
 
         self.InningsReplacement()
 
@@ -309,10 +356,49 @@ class Game(object):
 
         return True
 
-    # 获取玩家行动
-    def GetAndCROInstructions(self, NO) -> bool:
-        self.gameLock.acquire()
-        player = self.Players[NO]
+    def dealMove(self,req,player)->bool:
+        ins = req.ins
+        if (ins == "giveup"):
+            player.IsAbstain = True
+            player.POP_DONE = True
+            self.Print_Message(player.Name + " 弃权了 ")
+            return True
+        # 不允许玩家不出牌直接pass
+        elif (ins == "pass" and player.POP_POINT < player.POP_POINT_MAX):
+            player.POP_DONE = True
+            self.Print_Message(player.Name + " 结束了出牌 ")
+            return True
+        elif (ins == "pop"):
+            '''
+                0.2.1+
+                {
+                    "ins":"pop",
+                    "para":[
+                        card_i,
+                        card_uid,
+                        card_type,
+                        to...
+                    ]
+                }
+            '''
+            if (player.PopCard(req.para)):
+                return True
+        return False
+
+    def getAndCROInstructions_AI(self, player) -> bool:
+        AI = player.AI
+        AI.Freaze_Board()
+        while (True):
+            req = AI.GetBestMove()
+            print(req)
+            if self.dealMove(req,player):
+                break
+        result = [player.TolCombat,player.OpPlayer.TolCombat]
+        AI.Save_Board(result)
+        return True
+
+    def getAndCROInstructions_Player(self, player) -> bool:
+        NO = player.NO
         msg = "请输入指令:"
         ct = 0
         while (True):
@@ -320,49 +406,32 @@ class Game(object):
                 self.Clients[NO].PushResp(Resp(
                     player_NO=NO,
                     ins="inp",
-                    msg="[" + msg + ",%d,POP_POINT:%d/%d]" % (ct,player.POP_POINT,player.POP_POINT_MAX),
+                    msg="[" + msg + ",%d,POP_POINT:%d/%d]" % (ct, player.POP_POINT, player.POP_POINT_MAX),
                 ))
                 if (ct == 0):
                     self.Clients[abs(NO - 1)].PushResp(Resp(
-                        player_NO=abs(NO-1),
+                        player_NO=abs(NO - 1),
                         ins="prt",
                         msg="[等待对手出牌...]"
                     ))
                 req = self.Clients[NO].GetReq()
-                ins = req.ins
-                if (ins == "giveup"):
-                    player.IsAbstain = True
-                    player.POP_DONE = True
-                    self.Print_Message(player.Name + " 弃权了 ")
+                if(self.dealMove(req,player)):
                     break
-                # 不允许玩家不出牌直接pass
-                elif (ins == "pass" and player.POP_POINT<player.POP_POINT_MAX):
-                    player.POP_DONE = True
-                    self.Print_Message(player.Name + " 结束了出牌 ")
-                    break
-                elif (ins == "pop"):
-                    '''
-                        0.2.1+
-                        {
-                            "ins":"pop",
-                            "para":[
-                                card_i,
-                                card_uid,
-                                card_type,
-                                to...
-                            ]
-                        }
-                    '''
-                    if (player.PopCard(req.para)):
-                        break
-                # elif (ins[0] == "get"):
-                #    if (len(ins) >= 2):
-                #        player.GetCards(int(ins[1]))
-                #        break
             except:
                 pass
             msg = "指令错误，请重新输入:"
             ct += 1
+        return True
+
+
+    # 获取玩家行动
+    def GetAndCROInstructions(self, NO) -> bool:
+        self.gameLock.acquire()
+        player = self.Players[NO]
+        if player.AI!=None:
+            self.getAndCROInstructions_AI(player)
+        else:
+            self.getAndCROInstructions_Player(player)
         self.gameLock.release()
         return True
 

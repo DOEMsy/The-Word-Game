@@ -1,19 +1,17 @@
 from Card.Card import *
 from ExternalLibrary.ExternalLibrary import INT
-
+pep = PopExtraPara()
 
 class SkillCard(Card):
-    def __init__(self, name: str, desc: str, level: int, label: set, unleashOp = [0,False,0,False], selDedication = 0):
-        super().__init__(name, desc)
+    def __init__(self, name: str, desc: str, level: int, label: set, pep:list = []):
+        super().__init__(name, desc, pep)
         self.Level = level  # 等级
         self.Label = label  # 标签
         self.Type = "SkillCard"  # 卡牌类型
-        self.UnleashOp = unleashOp
-        self.SelDedication = selDedication
 
         self.ComUnitNameUIDStr = "" # 指令绑定的单位识别标识，无则由玩家释放
         self.ComUnitUID = None # 指令绑定的单位，无则由玩家释放
-
+        self.ComUnit = None
 
     # 出牌
     def Play(self, player, ins) -> bool:
@@ -122,8 +120,13 @@ class SkillCard(Card):
             "OwnNO": self.OwnNO,
             "Level": self.Level,
             "UID": self.UID,
-            # 释放目标需求，[选目标数，必须选全，选行数目，必须选全]
-            "UnleashOp": self.UnleashOp,
-            # 需要选择多少张牌进行献祭，（随机献祭不算在内）
-            "SelDedication": self.SelDedication,
         }
+
+    def encode(self)->list:
+        return [
+            self.Name,
+            self.Level,
+            self.Location,
+            self.Level,
+            self.Label.__len__(),
+        ]

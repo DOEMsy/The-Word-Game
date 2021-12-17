@@ -1,6 +1,8 @@
 from copy import deepcopy
 from random import sample, choice, randint
 import numpy as np
+from Card.Card import PopExtraPara
+PEP = PopExtraPara()
 from Card.UnitCard import UnitCard
 from ExternalLibrary.ExternalLibrary import NoSpell, ConcretizationCard
 
@@ -24,6 +26,7 @@ class HakureiReimu(UnitCard):
                 "人类",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -58,6 +61,7 @@ class TataraKogasa(UnitCard):
                 "妖精"
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -92,6 +96,7 @@ class TataraKogasaFake(UnitCard):
                 "妖精"
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -127,6 +132,7 @@ class KirisameMarisa(UnitCard):
                 "人类"
             },
             canto={2},
+            pep=[PEP.LINE,PEP.TUID],
         )
 
     def _debut(self, ins) -> bool:
@@ -156,6 +162,7 @@ class KonpakuYoumu(UnitCard):
                 "人类", "幽灵"
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -180,6 +187,7 @@ class Cirno(UnitCard):
                 "妖精"
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         self.summon = UnitCard(
             name="冻青蛙",
@@ -188,7 +196,9 @@ class Cirno(UnitCard):
             level=1,
             label={
                 "动物"
-            }
+            },
+            canto={1,2,3},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:

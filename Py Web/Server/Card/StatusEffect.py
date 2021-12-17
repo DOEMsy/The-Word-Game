@@ -32,7 +32,7 @@ class StatusEffect(Card):
         target.Status[UID].ThisGame = target.ThisGame
 
     def Is(self,Label):
-        return Is(self,Label)
+        return Is(Label,self)
 
     def lstr(self):
         return "[{},{},{},\n{}]".format(self.UID, self.Type, self.Name, self.Desc)

@@ -2,7 +2,8 @@ from copy import deepcopy
 from random import randint, choice
 
 import numpy as np
-
+from Card.Card import PopExtraPara
+PEP = PopExtraPara()
 from Card.SkillCard import SkillCard
 from Card.StatusEffect import StatusEffect
 from Card.UnitCard import UnitCard
@@ -25,7 +26,8 @@ class Explosion(SkillCard):
             level=4,
             label={
                 "魔法"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -58,7 +60,8 @@ class BodyWeak(SkillCard):
             level=2,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
         self.effect = Effect.BodyWeakEffect(self.combatAmend)
 
@@ -81,7 +84,8 @@ class SoulFusion(SkillCard):
             level=4,
             label={
                 "禁咒",
-            }
+            },
+            pep=[PEP.LINE,PEP.THWI]
         )
 
     def _debut(self, ins) -> bool:
@@ -129,7 +133,8 @@ class WarSupplies(SkillCard):
             level=3,
             label={
                 "计略"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -150,7 +155,8 @@ class HolyBlessing(SkillCard):
             level=2,
             label={
                 "圣吟"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -176,7 +182,8 @@ class NoSunStone(SkillCard):
             level=4,
             label={
                 "禁咒","天气"
-            }
+            },
+            pep=[PEP.THWI]
         )
 
     def _debut(self, ins) -> bool:
@@ -209,7 +216,8 @@ class LightningStrike(SkillCard):
             level=3,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -235,7 +243,8 @@ class TheFinalBattle(SkillCard):
             level=5,
             label={
                 "神术"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -267,7 +276,8 @@ class MagicArrow(SkillCard):
             level=1,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -293,7 +303,8 @@ class MagicMissile(SkillCard):
             level=2,
             label={
                 "魔法"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -325,7 +336,8 @@ class DieImmediately(SkillCard):
             level=4,
             label={
                 "禁咒"
-            }
+            },
+            pep=[PEP.TUID,PEP.THWI]
         )
 
     def _debut(self, ins) -> bool:
@@ -356,7 +368,8 @@ class Coin(SkillCard):
             level=2,
             label={
                 "物理", "宝具"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -386,7 +399,8 @@ class ReligiousTrial(SkillCard):
             level=3,
             label={
                 "圣吟"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -418,7 +432,8 @@ class ChaosFactor(SkillCard):
             level=4,
             label={
                 "腐化"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -460,7 +475,8 @@ class GreatPatrioticWar(SkillCard):
             level=5,
             label={
                 "计略"
-            }
+            },
+            pep=[]
         )
         self.summon = [Unit.ImperialKnight(), Unit.ImperialShotter(), Unit.ImperialShotter()]
         self.give = WarSupplies()
@@ -503,7 +519,8 @@ class RustyAxe(SkillCard):
             label={
                 "计略",
                 "宝具"
-            }
+            },
+            pep=[PEP.TUID]
         )
         self.effect = Effect.SingleDebuffingBuffTemplate(
             name="破伤风",
@@ -537,7 +554,8 @@ class Ragnarok(SkillCard):
             label={
                 "神术",
                 "宝具"
-            }
+            },
+            pep=[PEP.LINE]
         )
 
     # 123 己方行 -1-2-3敌方行
@@ -567,7 +585,8 @@ class FireBoom(SkillCard):
             level=3,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.LINE]
         )
 
     # 123 己方行 -1-2-3敌方行
@@ -597,7 +616,8 @@ class LionHeart(SkillCard):
             level=2,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.LINE]
         )
         self.effect = Effect.SingleBuffingBuffTemplate(
             name="雄心",
@@ -633,7 +653,8 @@ class Oppression(SkillCard):
             level=2,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.LINE]
         )
         self.effect = Effect.SingleDebuffingBuffTemplate(
             name="压迫",
@@ -669,7 +690,8 @@ class MagicBlasting(SkillCard):
             level=3,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -737,7 +759,8 @@ class LuckyCoin(SkillCard):
             level=2,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -770,7 +793,8 @@ class Healing(SkillCard):
             level=3,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -797,7 +821,8 @@ class ImaginaryParticleMissile(SkillCard):
             level=2,
             label={
                 "机械"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -831,7 +856,8 @@ class NanoTomographyProtection(SkillCard):
             level=3,
             label={
                 "机械"
-            }
+            },
+            pep=[PEP.TUID]
         )
         self.effect = Effect.SingleBuffingBuffTemplate(
             name="运算加速",
@@ -863,7 +889,8 @@ class MagicShield(SkillCard):
             level=2,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -887,7 +914,8 @@ class DivineRefuge(SkillCard):
             level=2,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -911,7 +939,8 @@ class Mystery(SkillCard):
             level=5,
             label={
                 "神术"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -961,7 +990,8 @@ class BodyDeprivation(SkillCard):
             level=4,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
         self.effect = Effect.SingleDebuffingBuffTemplate(
             name="灵魂剥夺",
@@ -990,7 +1020,8 @@ class StoneBound(SkillCard):
             level=3,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
         self.effect = Effect.SingleDebuffingBuffTemplate(
             name="石缚",
@@ -1018,7 +1049,8 @@ class ShieldBacklash(SkillCard):
             level=4,
             label={
                 "魔法", "机械"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -1055,7 +1087,8 @@ class Curse(SkillCard):
             level=1,
             label={
                 "魔法",
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -1098,7 +1131,8 @@ class CurseWaveTorrent(SkillCard):
             level=2,
             label={
                 "魔法",
-            }
+            },
+            pep=[PEP.LINE]
         )
 
     def _debut(self, ins) -> bool:
@@ -1134,7 +1168,8 @@ class TheFlameofBoredom(SkillCard):
             level=3,
             label={
                 "魔法",
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -1159,7 +1194,8 @@ class BlackMistofDead(SkillCard):
             level=2,
             label={
                 "魔法"
-            }
+            },
+            pep=[]
         )
         self.ExiEffectOn = [-3, -2, -1, 1, 2, 3]
         self.ExiLabel = {"魔法"}
@@ -1191,7 +1227,8 @@ class ChaosSiphon(SkillCard):
             level=3,
             label={
                 "魔法"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -1216,7 +1253,8 @@ class GuardianWideArea(SkillCard):
             level=1,
             label={
                 "魔法", "帝国"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -1244,7 +1282,8 @@ class OpenFire(SkillCard):
             level=3,
             label={
                 "计略"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -1278,7 +1317,8 @@ class EvilFanaticism(SkillCard):
             level=2,
             label={
                 "魔法"
-            }
+            },
+            pep=[PEP.TUID]
         )
         self.effect = Effect.SingleBuffingBuffTemplate(
             name='狂热',
@@ -1311,7 +1351,8 @@ class SacrificeStone(SkillCard):
             level=2,
             label={
                 "宝具","魔法"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -1335,7 +1376,8 @@ class CrystallizationRay(SkillCard):
             level=3,
             label={
                 "魔法","自然"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -1361,7 +1403,8 @@ class CrystalStorm(SkillCard):
             level=4,
             label={
                 "天气","魔法","自然"
-            }
+            },
+            pep=[]
         )
 
     def _debut(self, ins) -> bool:
@@ -1389,7 +1432,8 @@ class SymbioticCrystal(SkillCard):
             level=2,
             label={
                 "魔法","自然"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -1417,7 +1461,8 @@ class GaiaCore(SkillCard):
             level=5,
             label={
                 "魔法","自然","宝具"
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:
@@ -1445,7 +1490,8 @@ class LifeSqueeze(SkillCard):
             level=3,
             label={
                 "魔法",
-            }
+            },
+            pep=[PEP.TUID]
         )
 
     def _debut(self, ins) -> bool:

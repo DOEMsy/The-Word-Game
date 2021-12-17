@@ -43,6 +43,13 @@ def PackList(Cards: []) -> list:
         res.append(card.pack())
     return res
 
+# 将卡组中的卡编码
+def EncodeList(Cards: []) -> list:
+    res = []
+    for card in Cards:
+        res.append(card.encode())
+    return res
+
 def GetAllCardSstrList() ->list:
     return toSstr(sorted(AllCard.values(),key=lambda a:a.Level))
 

@@ -62,7 +62,7 @@ class Channel(object):
         self.toChanLock.acquire()
         self.toChan.append(msg)
         self.toChanLock.release()
-        if(self.islog): print("#推入指令：", msg)
+        if(self.islog and msg.ins!='scr'): print("#推入指令：", msg)
 
     # 推送消息
     # 向发送channel推入一位Req数据

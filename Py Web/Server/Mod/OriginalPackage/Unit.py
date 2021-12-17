@@ -3,6 +3,8 @@ from random import choice, randint, sample
 
 import numpy as np
 
+from Card.Card import PopExtraPara
+PEP = PopExtraPara()
 from Card.StatusEffect import StatusEffect
 from Card.UnitCard import UnitCard
 from ExternalLibrary.ExternalLibrary import GetUID, NoSpell, ConcretizationCard, GetRandCard
@@ -24,6 +26,7 @@ class Wolf(UnitCard):
                 "动物",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
 
@@ -40,6 +43,7 @@ class ImperialSoldier(UnitCard):
                 "人类", "帝国",
             },
             canto={1, 3},
+            pep=[PEP.LINE],
         )
 
 
@@ -56,6 +60,7 @@ class Goblin(UnitCard):
                 "亚人",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
 
@@ -75,6 +80,7 @@ class Ghoul(UnitCard):
                 "亡骸",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         # 注册死亡触发器
         self.Monitor_Death = True
@@ -100,6 +106,7 @@ class ImperialKnight(UnitCard):
                 "人类", "帝国"
             },
             canto={1, 3},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins):
@@ -124,6 +131,7 @@ class Doppler(UnitCard):
                 "高等生物",
             },
             canto={1, 2, 3},
+            pep=[PEP.LINE, PEP.TUID],
         )
 
     # to = ins = [local,target_UID]
@@ -156,6 +164,7 @@ class GiantGhoul(UnitCard):
                 "亡骸",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         # 注册死亡触发器
         self.Monitor_Death = True
@@ -184,6 +193,7 @@ class OneEyedGhoul(UnitCard):
                 "亡骸",
             },
             canto={1, 3},
+            pep=[PEP.LINE],
         )
         # 注册死亡触发器
         self.Monitor_Death = True
@@ -214,6 +224,7 @@ class LittlePudding(UnitCard):
                 "亡骸", "机械", "四学士",
             },
             canto={1, 3},
+            pep=[PEP.LINE],
         )
         # 注册死亡触发器
         self.Monitor_Death = True
@@ -240,6 +251,7 @@ class Spirit(UnitCard):
                 "自然", "魔法生物",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
 
 
@@ -260,6 +272,7 @@ class DobbyGolem(UnitCard):
                 "机械", "人类"
             },
             canto={1, 2},
+            pep=[PEP.LINE],
         )
         self.effect = Effect.FastSpeedCalculus(self.fast_speed_combat_add)
 
@@ -284,6 +297,7 @@ class BigWolf(UnitCard):
                 "动物",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.Nocturnal(self.night_combat_add), ]
 
@@ -304,6 +318,7 @@ class GiantGoblin(UnitCard):
                 "亚人",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
 
@@ -326,6 +341,7 @@ class GoblinKing(UnitCard):
                 "亚人", "界者",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         self.combat_up_effect = Effect.KingTactics(self.combat_up)
 
@@ -358,7 +374,9 @@ class ImperialShotter(UnitCard):
             level=1,
             label={
                 "人类", "帝国",
-            }
+            },
+            canto={2,3},
+            pep=[PEP.LINE],
         )
 
 
@@ -378,6 +396,7 @@ class PiterJerLfu(UnitCard):
                 "人类", "帝国",
             },
             canto={1, 3},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -401,6 +420,7 @@ class Blueness(UnitCard):
                 "亚人", "亚精灵", "雾行者的匕首",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -432,6 +452,7 @@ class K_902(UnitCard):
                 "机械",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -462,6 +483,7 @@ class BathFirePhoenix(UnitCard):
                 "自然",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
 
     def _dead(self) -> bool:
@@ -503,6 +525,7 @@ class LowerOrderVampire(UnitCard):
                 "血族", "人类"
             },
             canto={2},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.Nocturnal(self.night_combat_add), ]
 
@@ -531,6 +554,7 @@ class HighPriestofAltoMadike(UnitCard):
                 "人类", "神圣教国"
             },
             canto={3},
+            pep=[PEP.LINE],
         )
         self.ComCard = {Skill.ReligiousTrial(): self.card_num}
 
@@ -559,6 +583,7 @@ class Irinas(UnitCard):
                 "血族", "人类"
             },
             canto={2},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.Nocturnal(self.night_combat_add), ]
 
@@ -599,6 +624,7 @@ class RabbitWart(UnitCard):
                 "恶魔",
             },
             canto={1, 2, 3},
+            pep=[PEP.LINE],
         )
         self.summon = UnitCard(
             name="小兔疣",
@@ -608,7 +634,9 @@ class RabbitWart(UnitCard):
             level=4,
             label={
                 "恶魔",
-            }
+            },
+            canto={1,2,3},
+            pep=[PEP.LINE],
         )
         # 注册死亡触发器 分裂
         self.Monitor_Death = True
@@ -661,6 +689,7 @@ class Aetherial(UnitCard):
                 "自然", "魔法生物"
             },
             canto={2},
+            pep=[PEP.LINE],
         )
 
     def _addSelfCombat(self, num, effectLabel):
@@ -702,6 +731,7 @@ class Harwick(UnitCard):
                 "神明",
             },
             canto={3},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -736,6 +766,7 @@ class SkeletonSoldier(UnitCard):
                 "亡骸",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
 
@@ -752,6 +783,7 @@ class SkeletalMage(UnitCard):
                 "亡骸",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
 
 
@@ -769,6 +801,7 @@ class Ghosts(UnitCard):
                 "幽灵",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
     def _getDamage(self, num, effectLabel):
@@ -796,6 +829,7 @@ class MotherofGhosts(UnitCard):
                 "幽灵",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
         # 注册死亡触发器
         self.Monitor_Death = True
@@ -840,6 +874,7 @@ class MagicSource(UnitCard):
                 "魔法生物",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
         self.ShieldValue = self.shield_get
         self.summon = Skill.MagicMissile()
@@ -874,6 +909,7 @@ class GlassGiant(UnitCard):
                 "自然",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
     def _getDamage(self, num, effectLabel):
@@ -903,6 +939,7 @@ class StoneGiant(UnitCard):
                 "自然",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.ReduceCombatEffectivenessAccordingNumberofOtherUnitsInLine(
             name="笨重",
@@ -933,6 +970,7 @@ class SnowGiant(UnitCard):
                 "自然",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
     def _addStatus(self, status):
@@ -962,6 +1000,7 @@ class Mandrake(UnitCard):
                 "自然",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         self.cmt = self.SelfCombat
 
@@ -1006,6 +1045,7 @@ class Bell(UnitCard):
                 "宝具",
             },
             canto={1, 2, 3},
+            pep=[PEP.LINE],
         )
 
     def _addSelfCombat(self, num, effectLabel):
@@ -1042,6 +1082,7 @@ class SkeletonGiant(UnitCard):
                 "亡骸",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.SingleBuffingBuffTemplate(
             name="异形",
@@ -1071,6 +1112,7 @@ class Evilest(UnitCard):
                 "不死者", "恶魔", "腐化",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -1110,6 +1152,7 @@ class Worm(UnitCard):
                 "虫",
             },
             canto={1, 2, 3},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.NumberDisaster(self.cmt_add), ]
 
@@ -1133,6 +1176,7 @@ class GiantMalu(UnitCard):
                 "虫",
             },
             canto={1, 2},
+            pep=[PEP.LINE,PEP.TUID],
         )
         self.Effect = [Effect.NumberDisaster(self.cmt_add), ]
 
@@ -1157,6 +1201,7 @@ class Ants(UnitCard):
                 "虫",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.NumberDisaster(self.cmt_add), ]
 
@@ -1178,6 +1223,7 @@ class WormDragon(UnitCard):
                 "虫", "龙"
             },
             canto={3},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.NumberDisaster(self.cmt_add), ]
 
@@ -1202,6 +1248,7 @@ class DamascusButterfly(UnitCard):
                 "虫",
             },
             canto={2},
+            pep=[PEP.LINE],
         )
         self.Effect = [
             Effect.NumberDisaster(self.cmt_add),
@@ -1236,6 +1283,7 @@ class Leviathan(UnitCard):
                 "虫", "龙", "远古"
             },
             canto={3},
+            pep=[PEP.LINE],
         )
         self.Monitor_Pop = True
         self.Effect = [Effect.NumberDisaster(self.cmt_add), ]
@@ -1275,6 +1323,7 @@ class CPrimePlus(UnitCard):
                 "亡骸",
             },
             canto={1, 2, 3},
+            pep=[PEP.LINE],
         )
 
     def _aban(self) -> bool:
@@ -1304,6 +1353,7 @@ class DemonJay(UnitCard):
                 "恶魔",
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         self.ExiEffectOn = [-3, -2, -1, 1, 2, 3]
         self.ExiLabel = {"魔法", "恶魔"}
@@ -1347,6 +1397,7 @@ class Bahamut(UnitCard):
                 "龙",
             },
             canto={1, 2},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -1373,6 +1424,7 @@ class GoblinThief(UnitCard):
                 "亚人",
             },
             canto={1, 2, 3},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -1398,6 +1450,7 @@ class B_971(UnitCard):
                 "机械", "人类"
             },
             canto={3},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -1428,6 +1481,7 @@ class C_999(UnitCard):
                 "机械", "人类"
             },
             canto={3},
+            pep=[PEP.LINE],
         )
         self.ShieldValue = self.shield
         self.ExiEffectOn = [1, 2, 3]
@@ -1459,6 +1513,7 @@ class WuZun(UnitCard):
                 "四学士", "人类"
             },
             canto={3},
+            pep=[PEP.LINE],
         )
         self.ExiEffectOn = [-3, -2, -1, 1, 2, 3]
         self.ExiLabel = {"特性"}
@@ -1501,6 +1556,7 @@ class Deeren(UnitCard):
                 "亚人", "自然"
             },
             canto={1, 2},
+            pep=[PEP.LINE],
         )
 
 
@@ -1520,6 +1576,7 @@ class Elfslave(UnitCard):
                 "亚人", "自然"
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
 
@@ -1540,6 +1597,7 @@ class Flanders(UnitCard):
                 "神明",
             },
             canto={3},
+            pep=[PEP.LINE],
         )
 
     def _debut(self, ins) -> bool:
@@ -1579,6 +1637,7 @@ class Deusexmachina(UnitCard):
                 "神明", "机械",
             },
             canto={1, 2},
+            pep=[PEP.LINE],
         )
         self.ShieldValue = self.shield_get
         self.Monitor_Pop = True
@@ -1627,6 +1686,7 @@ class DeadSage(UnitCard):
                 "不死者",
             },
             canto={1, 2, 3},
+            pep=[PEP.LINE],
         )
         self.Monitor_Death = True
         self.Effect = [
@@ -1672,6 +1732,7 @@ class ChaosEvil(UnitCard):
                 "恶魔",
             },
             canto={1, 2},
+            pep=[PEP.LINE],
         )
         self.ComCard = {Skill.ChaosSiphon(): self.card_num}
 
@@ -1702,6 +1763,7 @@ class TheDomeofSky(UnitCard):
                 "神术", "宝具", "机械"
             },
             canto={3},
+            pep=[PEP.LINE],
         )
         self.ShieldValue = self.shieldValue
         self.Monitor_Pop = True
@@ -1747,6 +1809,7 @@ class MoonbearclassAerialBattleship(UnitCard):
                 "机械", "里约公国"
             },
             canto={3},
+            pep=[PEP.LINE],
         )
         self.ShieldValue = self.shieldValue
         self.ComCard = {Skill.OpenFire(): self.skill_ct}
@@ -1769,6 +1832,7 @@ class StHamoudclassAerialDestroyer(UnitCard):
                 "机械", "里约公国"
             },
             canto={2, 3},
+            pep=[PEP.LINE],
         )
         self.ShieldValue = self.shieldValue
 
@@ -1791,6 +1855,7 @@ class CrystalDragon(UnitCard):
                 "龙", "自然"
             },
             canto={1, 2, 3},
+            pep=[PEP.LINE],
         )
         self.ShieldValue = self.shieldValue
         self.ExiEffectOn = [1, 2, 3]
@@ -1829,6 +1894,7 @@ class CrystalDeathWorm(UnitCard):
                 "虫", "自然"
             },
             canto={1, 2},
+            pep=[PEP.LINE],
         )
         self.ShieldValue = self.shieldValue
         self.Effect = [Effect.NumberDisaster(self.cmt_add), ]
@@ -1861,6 +1927,7 @@ class HighOrderVampire(UnitCard):
                 "血族", "人类"
             },
             canto={2},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.Nocturnal(self.night_combat_add), ]
 
@@ -1892,6 +1959,7 @@ class AncientGorefiend(UnitCard):
                 "血族", "远古"
             },
             canto={1},
+            pep=[PEP.LINE],
         )
         self.Monitor_GetDmg = True
         self.Effect = [Effect.Nocturnal(self.night_combat_add), ]
@@ -1937,6 +2005,7 @@ class NicholasDuArundel(UnitCard):
                 "血族", "人类", "里约公国"
             },
             canto={2},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.Nocturnal(self.night_combat_add), ]
         self.ComCard = {Skill.LifeSqueeze(): self.skill_ct}
@@ -1970,6 +2039,7 @@ class LifeSeed(UnitCard):
                 "自然", "远古"
             },
             canto={3},
+            pep=[PEP.LINE],
         )
         self.Effect = [Effect.NotCombatUnit(), ]
 
@@ -2041,6 +2111,7 @@ class GriefSeed(UnitCard):
                 "自然",
             },
             canto={-3, -2, -1, 1, 2, 3},
+            pep=[PEP.LINE],
         )
 
     # 效能
@@ -2071,19 +2142,18 @@ class GriefSeed(UnitCard):
 
 class NothingnessVariant(UnitCard):
     def __init__(self):
-        self.cmt_line = 10
-        self.min_add = 1
         super().__init__(
             name="虚无变体",
             desc="来自彼世的无形生命体，可以幻化成任何生物，任何形状\n"
                  "◇刺激反馈：受到的非神术伤害会全部转化为基础战斗力"
-                 "".format(self.cmt_line, self.min_add),
+                 "".format(),
             combat=0,
             level=3,
             label={
                 "彼世生物",
             },
             canto={1, 2, 3},
+            pep=[PEP.LINE],
         )
 
     def _getDamage(self, num, effectLabel):
@@ -2118,6 +2188,7 @@ class SoulSeaWhale(UnitCard):
                 "彼世生物",
             },
             canto={3},
+            pep=[PEP.LINE],
         )
         self.ExiEffectOn = {-3, -2, -1, 1, 2, 3}
         self.ExiLabel = {"魔法"}
@@ -2150,6 +2221,7 @@ class HordaRego(UnitCard):
                 "人类", "冒险者"
             },
             canto={1},
+            pep=[PEP.LINE],
         )
 
     def _selftoLineOn(self):
@@ -2180,7 +2252,7 @@ class Ronin(UnitCard):
                 "人类", "冒险者"
             },
             canto={1},
-
+            pep=[PEP.LINE],
         )
         self.Monitor_GetDmg = True
         self.zhuiji_uid_set = set()

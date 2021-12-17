@@ -19,7 +19,7 @@ random.seed(seed)
 np.random.seed(seed)
 
 game = Game()
-game.StartServer()
+game.StartServerPvP()
 
 # test↓
 '''

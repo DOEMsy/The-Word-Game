@@ -1,10 +1,16 @@
 from ExternalLibrary.ExternalLibrary import GetUID, Throw_VisualizationError, ConcretizationCard
 from Game.Label import Is
 
+class PopExtraPara(object):
+    def __init__(self):
+        self.LINE = "${line}"           # 行
+        self.TUID = "${target_uid}"     # 目标uid
+        self.THWI = "${throw_i}"        # 弃卡index
+
 
 class Card(object):
 
-    def __init__(self, name: str, desc: str):
+    def __init__(self, name: str, desc: str , pop_extra_para = []):
         self.Name = name  # 名称
         self.Desc = desc  # 介绍
         self.Type = "None"  # 卡牌类型
@@ -16,6 +22,7 @@ class Card(object):
         self.visualization = False  # 具象化，没有具象化的卡牌不允许使用
         self.ExiEffectOn = [] # 存在时效果作用范围 3 2 1 -1 -2 -3
         self.ExiLabel = {}  # 存在时效果lab
+        self.pop_extra_para = pop_extra_para
 
     # 抽入手中，返回值必须为True
     def Pump(self, player) -> bool:

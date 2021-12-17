@@ -31,6 +31,14 @@ class Player(object):
         self.POP_POINT = 0
         self.POP_DONE = False
         self.ActionAttributeValue = {"禁咒":0}
+        self.AI = None
+
+    def Load_AI(self,AI):
+        self.AI = AI
+        AI.player = self
+        AI.ThisGame = self.ThisGame
+        AI.OpPlayer = self.OpPlayer
+        AI.Init_Oup()
 
     def Reload_POP_POINT(self):
         self.POP_POINT = self.POP_POINT_MAX
@@ -45,7 +53,7 @@ class Player(object):
         self.HandCards.sort(key=lambda x:x.Level)
 
     # 出牌 每轮可以出8点（level）
-    def PopCard(self, ins) -> bool:
+    def PopCard(self, ins:list) -> bool:
         try:
             card_i = int(ins[0])
             if (len(self.HandCards) <= card_i): return False

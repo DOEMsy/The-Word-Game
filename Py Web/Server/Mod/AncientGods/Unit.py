@@ -1,6 +1,8 @@
 from copy import deepcopy
 from random import sample, choice, randint
 import numpy as np
+from Card.Card import PopExtraPara
+PEP = PopExtraPara()
 from Card.UnitCard import UnitCard
 from ExternalLibrary.ExternalLibrary import NoSpell, ConcretizationCard
 from ExternalLibrary.MsyEvent import GetDmg
@@ -23,6 +25,7 @@ class Kraken(UnitCard):
                 "远古"
             },
             canto={1},
+            pep=[PEP.LINE]
         )
 
 # --------------- 征服·天启四骑士 ---------------
@@ -41,6 +44,7 @@ class ConquerApocalypse(UnitCard):
                 "天使"
             },
             canto={1},
+            pep=[PEP.LINE]
         )
 
     def _addSelfCombat(self, num, effectLabel):
@@ -58,11 +62,11 @@ class ConquerApocalypse(UnitCard):
 
 class ExtirpateApocalypse(UnitCard):
     def __init__(self):
-        self.card_num = 3
+        self.card_num = 2
         super().__init__(
             name="屠戮",
             desc="◇天启四骑士：揭开第二印的时候，我听见第二个活物说：“你来！”就另有一匹马出来，是红的。有权柄给了那骑马的，可以从地上夺去太平，使人彼此相杀，又有一把大刀赐给他。\n"
-                 "◇天启·屠戮：拥有{}次释放屠戮的机会\n"
+                 "◇天启·屠戮：拥有{}次释放屠戮的机会，每次屠戮杀死单位时，将获得一张新的屠戮\n"
                  "◇天启·神羽：不会受到任何的伤害和状态效果，但是不免疫死亡"
                  "".format(self.card_num),
             combat=0,
@@ -71,6 +75,7 @@ class ExtirpateApocalypse(UnitCard):
                 "天使"
             },
             canto={2},
+            pep=[PEP.LINE]
         )
         self.ComCard = {Skill.Extirpate():self.card_num}
 
@@ -88,7 +93,7 @@ class ExtirpateApocalypse(UnitCard):
 
 class FamineApocalypse(UnitCard):
     def __init__(self):
-        self.throw_num = 2
+        self.throw_num = 1
         self.shield_value = 12
         super().__init__(
             name="饥荒",
@@ -102,6 +107,7 @@ class FamineApocalypse(UnitCard):
                 "天使"
             },
             canto={2},
+            pep=[PEP.LINE],
             shieldValue=self.shield_value,
         )
 
@@ -129,6 +135,7 @@ class PlagueApocalypse(UnitCard):
                 "天使"
             },
             canto={2},
+            pep=[PEP.LINE]
         )
         self.Monitor_GetDmg = True
     def  _getDmgProcessing(self, event:GetDmg):

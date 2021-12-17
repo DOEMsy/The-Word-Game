@@ -1,15 +1,16 @@
 from copy import deepcopy
 
 from Card.Card import *
+PEP = PopExtraPara()
 from ExternalLibrary import MsyEvent
 from ExternalLibrary.ExternalLibrary import toDict, INT, PackList
 from ExternalLibrary.MsyEvent import Death, Pop, GetDmg
 
 
 class UnitCard(Card):
-    def __init__(self, name: str, desc: str, combat: int, level: int, label: set, canto: set = {1, 2, 3},
-                 shieldValue = 0,unleashOp=[0, False, 0, False], selDedication=0):
-        super().__init__(name, desc)
+    def __init__(self, name: str, desc: str, combat: int, level: int, label: set, canto: set,
+                 pep:list = [PEP.LINE], shieldValue = 0,):
+        super().__init__(name, desc, pep)
         self.SelfCombat = combat  # 基础值战斗力
         self.Level = level  # 等级
         self.Label = label  # 标签
@@ -21,8 +22,7 @@ class UnitCard(Card):
 
         self.Alive = True  # 保证死亡函数只能执行一次
         self.CantoLines = canto  # 可以打入的行
-        self.UnleashOp = unleashOp
-        self.SelDedication = selDedication
+
         self.Effect = []  # 固有效果
         self.ShieldValue = shieldValue  # 护盾版本 0.0.1 测试
 
@@ -94,6 +94,15 @@ class UnitCard(Card):
     def _debut(self, ins) -> bool:
         return True
 
+    # 获取指令卡牌
+    def PumpComCard(self,skill_card):
+        card = ConcretizationCard(skill_card)
+        self._comCardUIDList.append(card.UID)
+        card.ComUnitNameUIDStr = "∈" + self.Name + '(' + str(self.UID) + ')'
+        card.ComUnitUID = self.UID
+        card.ComUnit = self
+        card.Pump(self.OwnPlayer)
+
     # 自施加效果启动，在部署到战场上时被调用
     def SelftoLineOn(self):
 
@@ -103,13 +112,9 @@ class UnitCard(Card):
             self.AddStatus(efc)
 
         # 获取指令卡牌
-        for tp, num in self.ComCard.items():
+        for card, num in self.ComCard.items():
             for _ in range(num):
-                card = ConcretizationCard(tp)
-                self._comCardUIDList.append(card.UID)
-                card.ComUnitNameUIDStr = "∈" + self.Name + '(' + str(self.UID) + ')'
-                card.ComUnitUID = self.UID
-                card.Pump(self.OwnPlayer)
+                self.PumpComCard(card)
 
         # 注册监视器
         # 死亡监视器
@@ -402,8 +407,18 @@ class UnitCard(Card):
             "SelfCombat": self.SelfCombat,
             "Combat": self.Combat(),
             "Status": PackList(list(self.Status.values())),
-            # 释放目标需求，[选目标数，必须选全，选行数目，必须选全]
-            "UnleashOp": self.UnleashOp,
-            # 需要选择多少张牌进行献祭，（随机献祭不算在内）
-            "SelDedication": self.SelDedication,
         }
+
+    # 特征提取
+    def encode(self) -> list:
+        return [
+            self.Name,
+            self.Level,
+            self.SelfCombat,
+            self.Combat(),
+            self.Location,
+            self.Level,
+            self.Label.__len__(),
+            self.Status.__len__(),
+            self.OwnNO,
+        ]

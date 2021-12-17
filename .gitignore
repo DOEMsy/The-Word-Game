@@ -145,3 +145,5 @@ test/
 tmp.*
 tmp
 tmp/
+data
+data/

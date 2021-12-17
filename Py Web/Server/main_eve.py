@@ -14,7 +14,7 @@ random.seed(seed)
 np.random.seed(seed)
 
 game = Game()
-game.StartServerPvP()
+game.StartServerEvE()
 
 # test↓
 '''
